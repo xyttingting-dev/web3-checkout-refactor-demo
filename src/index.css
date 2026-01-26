@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 antialiased;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
+}
+
+/* Custom Utilities */
+.glass-panel {
+  @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
+}
+
+/* Ant Design Global Overrides */
+:root {
+  --ant-primary-color: #4F46E5; /* Indigo 600 */
+}
+
+.ant-modal-content {
+  @apply rounded-3xl !important;
+}
+
+.ant-btn {
+  @apply h-10 px-6 rounded-xl font-medium !important;
+}
+
+.ant-btn-primary {
+  @apply bg-indigo-600 shadow-lg shadow-indigo-500/30 border-none hover:!bg-indigo-500 hover:scale-105 transition-all duration-300 !important;
+}
+
+.ant-input {
+  @apply rounded-xl border-gray-200 py-2.5 px-4 focus:ring-2 focus:ring-indigo-100 !important;
+}

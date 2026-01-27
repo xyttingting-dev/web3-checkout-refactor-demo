@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 
-export type CheckoutState = 'SELECTION' | 'HYBRID_ACTION' | 'PROCESSING' | 'FALLBACK';
-export type WalletId = 'binance' | 'metamask' | 'okx' | 'phantom' | 'walletconnect';
+export type CheckoutState = 'SELECTION' | 'FOCUS' | 'PROCESSING' | 'HYBRID_ACTION' | 'FALLBACK';
+export type WalletId =
+    | 'metamask' | 'bitget' | 'okx' | 'coinbase' | 'particle' | 'walletconnect' | 'imtoken' | 'coolwallet' | 'tronlink'
+    | 'binance' | 'kucoin' | 'gate' | 'phantom' | 'trust' | 'rainbow' | 'rabbithole' | 'injected';
 
 export interface CheckoutContext {
     state: CheckoutState;
@@ -19,21 +21,28 @@ export const useCheckoutState = (): CheckoutContext => {
         console.log('Selected wallet:', id);
         setSelectedWallet(id);
 
-        if (id === 'binance' || id === 'okx') {
-            setState('HYBRID_ACTION');
-        } else if (id === 'metamask') {
-            // Simulate Web3 Connection flow
+        // Phase 1: Focus (Immediate UI feedback)
+        setState('FOCUS');
+
+        // Phase 2: Processing/Ripple (Simulated delay)
+        setTimeout(() => {
             setState('PROCESSING');
-            // Logic: Simulate user opening MetaMask -> Waiting -> User Rejects or Timeout
+
+            // Phase 3: Routing Logic
             setTimeout(() => {
-                console.warn('Simulation: Connection Timed Out / Rejected');
-                setState('FALLBACK');
-            }, 3000);
-        } else {
-            // Other wallets generic flow
-            setState('PROCESSING');
-            setTimeout(() => setState('FALLBACK'), 3000);
-        }
+                if (['binance', 'kucoin', 'gate'].includes(id)) {
+                    setState('HYBRID_ACTION');
+                } else if (id === 'walletconnect') {
+                    // Wallet Connect usually brings up its own modal or QR, 
+                    // but here we might simulate a connecting state or fallback
+                    setState('FALLBACK');
+                } else {
+                    // Standard Wallet -> Attempt Deep Link -> Fail -> Fallback
+                    // Simulating failure/not installed for demo
+                    setState('FALLBACK');
+                }
+            }, 1500); // Wait for Ripple effect
+        }, 600); // Wait for Focus animation
     }, []);
 
     const confirmHybridAction = useCallback((type: 'custodial' | 'web3') => {

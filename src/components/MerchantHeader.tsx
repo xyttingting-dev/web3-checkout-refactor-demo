@@ -28,6 +28,13 @@ export const MerchantHeader = () => {
                 <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-white/10 via-transparent to-transparent"></div>
                 <div className="absolute top-0 left-0 w-full h-1 bg-white/30"></div>
 
+                {/* Animated 'Pay' Watermark */}
+                <div className="absolute -bottom-8 -right-8 opacity-[0.05] pointer-events-none select-none animate-float z-0 transform rotate-12">
+                    <span className="text-[160px] font-black text-white italic tracking-tighter leading-none">
+                        Pay
+                    </span>
+                </div>
+
                 {/* Banner 中央：商户 Icon + USDT 标 */}
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="relative">

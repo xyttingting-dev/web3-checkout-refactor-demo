@@ -1,6 +1,6 @@
 import { useCheckoutState } from './hooks/useCheckoutState';
 import { WalletGrid } from './components/WalletGrid';
-import { HybridPanel } from './components/HybridPanel';
+import { DetailPanel } from './components/DetailPanel';
 import { FallbackConsole } from './components/FallbackConsole';
 import { MerchantHeader } from './components/MerchantHeader';
 import { ChevronDown } from 'lucide-react';
@@ -37,7 +37,7 @@ function App() {
           )}
 
           {state === 'HYBRID_ACTION' && selectedWallet && (
-            <HybridPanel
+            <DetailPanel
               walletId={selectedWallet}
               onConfirm={confirmHybridAction}
               onBack={reset}

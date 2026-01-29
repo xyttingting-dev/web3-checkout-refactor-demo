@@ -10,7 +10,7 @@ export default {
                 sans: ['Inter', 'system-ui', 'sans-serif'], // Modern font
             },
             animation: {
-                float: 'float 3s ease-in-out infinite',
+                float: 'float 4s ease-in-out infinite',
                 breathe: 'breathe 3s ease-in-out infinite',
                 radar: 'radar 2s linear infinite',
                 blob: "blob 7s infinite",
@@ -18,7 +18,7 @@ export default {
             keyframes: {
                 float: {
                     '0%, 100%': { transform: 'translateY(0)' },
-                    '50%': { transform: 'translateY(-6px)' },
+                    '50%': { transform: 'translateY(-12px)' },
                 },
                 breathe: {
                     '0%, 100%': { boxShadow: '0 0 0 0px rgba(99, 102, 241, 0.1)' },

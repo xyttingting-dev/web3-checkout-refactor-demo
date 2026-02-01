@@ -87,17 +87,24 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
     return (
         <div className="flex flex-col h-full min-h-[400px] relative">
 
+
             {/* Global Overlay for Processing State */}
             <AnimatePresence>
+                {/* Condition: PROCESSING state AND wallet is selected. 
+                    This covers both:
+                    1. Initial Wallet Selection (Simulated Processing)
+                    2. Web3 Connect Processing (triggered by selectPath) 
+                */}
                 {isProcessing && selectedWalletId && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-xl rounded-2xl"
+                        className="absolute inset-0 z-[60] flex items-center justify-center bg-white/60 backdrop-blur-xl rounded-2xl"
                     >
                         {/* Centered Breathing Icon */}
                         <motion.div
+                            key="loader"
                             layoutId={`wallet-icon-${selectedWalletId}`}
                             className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.5)] z-50 relative"
                             animate={{ scale: [1, 1.08, 1] }}

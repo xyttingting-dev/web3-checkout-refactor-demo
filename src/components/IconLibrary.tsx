@@ -72,22 +72,38 @@ export const IconOKX = () => (
     </svg>
 );
 
+
+export const IconTokenPocket = () => (
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="8" fill="#2962FF" />
+        <path d="M20 10L12 18V28C12 29 13 30 14 30H26C27 30 28 29 28 28V18L20 10Z" fill="white" />
+        <path d="M20 14L28 22" stroke="#2962FF" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+);
+
+
 // === Network Icons ===
 
 export const IconTron = () => (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L2 19.5H22L12 2Z" stroke="#EF0027" strokeWidth="2" />
-        <path d="M12 7L6 17H18L12 7Z" fill="#EF0027" />
-    </svg>
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 19.5H22L12 2Z" stroke="#EF0027" strokeWidth="2" /><path d="M12 7L6 17H18L12 7Z" fill="#EF0027" /></svg>
 );
 
 export const IconBSC = () => (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L16 6L12 10L8 6L12 2Z" fill="#F3BA2F" />
-        <path d="M6 8L10 12L6 16L2 12L6 8Z" fill="#F3BA2F" />
-        <path d="M18 8L22 12L18 16L14 12L18 8Z" fill="#F3BA2F" />
-        <path d="M12 14L16 18L12 22L8 18L12 14Z" fill="#F3BA2F" />
+        <path d="M12 1L15.5 7H8.5L12 1Z" fill="#F3BA2F" /><path d="M5 7L8.5 13H1.5L5 7Z" fill="#F3BA2F" /><path d="M19 7L22.5 13H15.5L19 7Z" fill="#F3BA2F" /><path d="M12 13L15.5 19H8.5L12 13Z" fill="#F3BA2F" /><rect x="10" y="8" width="4" height="4" fill="#F3BA2F" />
     </svg>
+);
+
+export const IconEthereum = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M11.9999 1.66663L11.6094 3.0208L2 15.6666L11.9999 21.6666L22 15.6666L12.3904 3.0208L11.9999 1.66663Z" fill="#343434" /><path d="M11.9999 1.66663L2 15.6666L11.9999 21.6666V13.3333L11.6094 3.0208L11.9999 1.66663Z" fill="#8C8C8C" /><path d="M11.9999 13.3333L21.9999 15.6666L11.9999 21.6666V13.3333Z" fill="#3C3C3B" /><path d="M11.9999 13.3333L21.9999 15.6666L11.9999 1.66663V13.3333Z" fill="#141414" /><path d="M2 15.6666L11.9999 13.3333V1.66663L2 15.6666Z" fill="#393939" /></svg>
+);
+
+export const IconPolygon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L3.34 7V17L12 22L20.66 17V7L12 2Z" fill="#8247E5" /></svg>
+);
+
+export const IconAvalanche = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 19.5H22L12 2Z" fill="#E84142" /><circle cx="12" cy="8" r="2" fill="white" /></svg>
 );
 
 // === Helper to get icon by ID ===
@@ -99,6 +115,7 @@ export const getWalletIcon = (id: string) => {
         case 'phantom': return <IconPhantom />;
         case 'coinbase': return <IconCoinbase />;
         case 'coolwallet': return <IconCoolWallet />;
+        case 'tokenpocket': return <IconTokenPocket />;
         case 'binance': return <IconBinance />;
         case 'kucoin': return <IconKuCoin />;
         case 'gate': return <IconGate />;
@@ -110,13 +127,14 @@ export const getWalletIcon = (id: string) => {
     }
 };
 
+
 export const getNetworkIcon = (id: string) => {
     switch (id) {
         case 'tron': return <IconTron />;
         case 'bsc': return <IconBSC />;
-        case 'eth': return <img src="https://cryptologos.cc/logos/ethereum-eth-logo.svg?v=026" alt="ETH" className="w-full h-full object-contain" />;
-        case 'polygon': return <img src="https://cryptologos.cc/logos/polygon-matic-logo.svg?v=026" alt="MATIC" className="w-full h-full object-contain" />;
-        case 'avax': return <img src="https://cryptologos.cc/logos/avalanche-avax-logo.svg?v=026" alt="AVAX" className="w-full h-full object-contain" />;
+        case 'eth': return <IconEthereum />;
+        case 'polygon': return <IconPolygon />;
+        case 'avax': return <IconAvalanche />;
         default: return null;
     }
 };

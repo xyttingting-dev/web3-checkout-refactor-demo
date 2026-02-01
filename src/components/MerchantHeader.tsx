@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Store, Check, Copy, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, Copy, ChevronDown, ChevronUp } from 'lucide-react';
 
 export const MerchantHeader = () => {
     const [expanded, setExpanded] = useState(false);
@@ -35,17 +35,11 @@ export const MerchantHeader = () => {
                     </span>
                 </div>
 
-                {/* Banner 中央：商户 Icon + USDT 标 */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="relative">
-                        {/* 白色半透明的 Store Icon */}
-                        <Store className="text-white/90 w-14 h-14 drop-shadow-md" strokeWidth={1.5} />
-
-                        {/* USDT 角标 */}
-                        <div className="absolute -bottom-1 -right-2 bg-[#26A17B] text-white rounded-full w-6 h-6 flex items-center justify-center border-2 border-transparent shadow-sm font-bold text-[10px]">
-                            T
-                        </div>
-                    </div>
+                {/* Banner Text: Merchant Name */}
+                <div className="absolute inset-0 flex items-center justify-center px-8">
+                    <span className="text-white text-2xl font-black tracking-tight drop-shadow-md text-center line-clamp-2 leading-tight">
+                        BonusPay Global Merchant
+                    </span>
                 </div>
             </div>
 
@@ -54,13 +48,18 @@ export const MerchantHeader = () => {
          Banner高144px，图片从128px开始，重叠16px。
          这比之前的位置更靠下，拉开了与Banner的距离。
       */}
-            <div className="absolute top-32 left-6 z-10">
-                <div className="relative h-20 w-20 bg-white rounded-2xl shadow-lg ring-4 ring-white overflow-hidden group">
+            <div className="absolute top-32 left-6 z-10 w-fit">
+                <div className="relative h-20 w-20 bg-white rounded-2xl shadow-lg ring-4 ring-white overflow-visible group">
                     <img
                         src="https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=300&auto=format&fit=crop"
                         alt="Product Placeholder"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover rounded-xl"
                     />
+
+                    {/* USDT Badge Moved Here */}
+                    <div className="absolute -bottom-2 -right-2 bg-[#26A17B] text-white rounded-full w-6 h-6 flex items-center justify-center border-2 border-white shadow-sm font-bold text-[10px] z-20">
+                        <img src="https://cryptologos.cc/logos/tether-usdt-logo.svg?v=026" className="w-4 h-4" alt="T" />
+                    </div>
                 </div>
             </div>
 

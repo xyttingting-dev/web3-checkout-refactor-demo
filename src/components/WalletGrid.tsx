@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import type { WalletId, CheckoutState } from '../hooks/useCheckoutState';
 import { Search, ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 import { useConnectors } from 'wagmi';
 import { getWalletIcon } from './IconLibrary';
 import { motion, AnimatePresence } from 'framer-motion';
+import { WalletLibrary } from './WalletLibrary';
 
 // --- Wallet Inventory Definitions ---
 const ALL_WALLETS = [
@@ -12,16 +13,17 @@ const ALL_WALLETS = [
     { id: 'walletconnect', name: 'WalletConnect' },
     { id: 'bitget', name: 'Bitget Wallet' },
     { id: 'okx', name: 'OKX Wallet' },
-    { id: 'coinbase', name: 'Coinbase' },
+    { id: 'coinbase', name: 'Coinbase Wallet' },
     { id: 'imtoken', name: 'imToken' },
-    { id: 'phantom', name: 'Phantom' },
     { id: 'trust', name: 'Trust Wallet' },
+    { id: 'tokenpocket', name: 'TokenPocket' },
     { id: 'tronlink', name: 'TronLink' },
+    { id: 'phantom', name: 'Phantom' },
+    { id: 'coolwallet', name: 'CoolWallet' },
 ];
+
 const EXCHANGE_WALLETS = [
     { id: 'binance', name: 'Binance' },
-    { id: 'kucoin', name: 'KuCoin' },
-    { id: 'gate', name: 'Gate.io' },
 ];
 
 interface WalletGridProps {
@@ -38,27 +40,47 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
     if (detectedNames.length === 0) detectedNames.push('metamask');
 
     const [activeTab, setActiveTab] = useState<'web3' | 'exchange'>('web3');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [searchFocused, setSearchFocused] = useState(false);
+    const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
 
     const sortedWeb3Wallets = [...ALL_WALLETS].sort((a, b) => {
         const aDetected = detectedNames.some(n => n.includes(a.name.toLowerCase().split(' ')[0].toLowerCase()));
         const bDetected = detectedNames.some(n => n.includes(b.name.toLowerCase().split(' ')[0].toLowerCase()));
+
         if (aDetected && !bDetected) return -1;
         if (!aDetected && bDetected) return 1;
-        if (a.id === 'walletconnect' && b.id !== 'walletconnect') return -1;
-        if (a.id !== 'walletconnect' && b.id === 'walletconnect') return 1;
+
         return 0;
     });
 
     const targetList = activeTab === 'web3' ? sortedWeb3Wallets : EXCHANGE_WALLETS;
-    let displayedWallets = targetList.filter(w => w.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const showFolding = activeTab === 'web3' && searchQuery === '' && !isExpanded;
-    const initialDisplayCount = 6; // Show more initially to fit design better if folded
-    const visibleWallets = (showFolding) ? displayedWallets.slice(0, 6) : displayedWallets; // Adjusted logic
-    const remainingCount = displayedWallets.length - 6;
+    // First Level: Popular 6 (Indices 0-5)
+    // Second Level: Expanded All
+    const initialDisplayCount = 6;
+
+    // Logic: 
+    // If not expanded: Show first 8.
+    // If expanded: Show ALL.
+    // + More Card: ALWAYS render as the last item if expanded, OR as the 8th item if not expanded?
+    // Requirement:
+    // "First Level: Popular 8" -> Show 0-7.
+    // "Second Level: Show more wallets" -> Expand all.
+    // "At the end of expanded list -> + More card".
+
+    // Actually the requirement says: 
+    // "第一级 (首页 Popular)： 展示精选的 8 个常用钱包。"
+    // "第二级 (展开列表)： 点击列表下方的 Show more wallets 后，在当前页面平滑展开全量钱包网格。"
+    // "关键点： 在展开后的网格最后一位，增加一个具备扩展感的 + More 规范入口卡片"
+
+    // So:
+    // 1. Initial view: 8 wallets.
+    // 2. Button "Show more wallets" below grid.
+    // 3. Expanded view: All listed wallets + "+ More" card at the very end.
+
+    const displayedWallets = isExpanded
+        ? targetList
+        : targetList.slice(0, initialDisplayCount);
 
     const isProcessing = checkoutState === 'PROCESSING';
 
@@ -111,74 +133,98 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                 </button>
             </div>
 
-            {/* Search Bar */}
+            {/* Search Bar - Acts as Library Trigger */}
             <div className="relative mb-4 group flex-shrink-0 z-20">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-blue-500">
-                    <Search size={16} /> {/* Generic search icon instead of WC logo */}
+                    <Search size={16} />
                 </div>
                 <input
                     type="text"
-                    value={searchQuery}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search wallet"
-                    className="w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-gray-400"
+                    onFocus={() => setIsLibraryOpen(true)}
+                    onClick={() => setIsLibraryOpen(true)}
+                    readOnly
+                    value=""
+                    placeholder="Search wallets"
+                    className="w-full pl-10 pr-10 py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder-gray-400 cursor-pointer"
                 />
             </div>
 
-            {/* Grid Area */}
-            <div className="flex-1 overflow-y-auto pr-1 -mr-1 custom-scrollbar relative z-0 pl-1 pt-1">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pb-4">
-                    {visibleWallets.map((w) => {
-                        const isSelected = selectedWalletId === w.id;
-                        // const isDetected = detectedNames.some(n => n.includes(w.name.toLowerCase().split(' ')[0].toLowerCase()));
-
-                        return (
-                            <button
-                                key={w.id}
-                                onClick={() => onSelect(w.id as WalletId)}
-                                className={clsx(
-                                    "group relative flex flex-col items-center justify-center p-4 rounded-xl transition-all duration-300 min-h-[110px]",
-                                    "bg-white border border-gray-100",
-                                    // Remove border on hover, use shadow/transform
-                                    !isSelected && "hover:shadow-lg hover:-translate-y-1 hover:border-blue-200",
-                                    // Real Selection State using Rings. Z-index 20 ensures visual layering over neighbors.
-                                    isSelected ? "ring-2 ring-blue-500 ring-offset-2 z-20" : "z-0"
-                                )}
+            <div className="grid grid-cols-3 gap-3 pb-4 px-1">
+                {displayedWallets.map((w) => {
+                    const isSelected = selectedWalletId === w.id;
+                    return (
+                        <button
+                            key={w.id}
+                            onClick={() => onSelect(w.id as WalletId)}
+                            className={clsx(
+                                "group relative flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300 min-h-[100px]",
+                                "bg-white border border-gray-100",
+                                !isSelected && "hover:shadow-lg hover:-translate-y-1 hover:border-blue-200",
+                                isSelected ? "ring-2 ring-blue-500 ring-offset-2 z-30" : "z-0"
+                            )}
+                        >
+                            <motion.div
+                                layoutId={isProcessing && isSelected ? `wallet-icon-${w.id}` : undefined}
+                                className="w-10 h-10 rounded-xl mb-2 flex items-center justify-center bg-white transition-all duration-300"
                             >
-                                <motion.div
-                                    // Use layoutId for shared element transition if not processing, 
-                                    // OR handle the lift off. 
-                                    // Strategically, if we are processing, this element 'disappears' here and 'reappears' in overlay via layoutId.
-                                    layoutId={isProcessing && isSelected ? `wallet-icon-${w.id}` : undefined}
-                                    className="w-12 h-12 rounded-xl mb-3 flex items-center justify-center bg-white transition-all duration-300"
-                                >
-                                    {getWalletIcon(w.id)}
-                                </motion.div>
+                                {getWalletIcon(w.id)}
+                            </motion.div>
 
-                                <span className={clsx(
-                                    "font-semibold text-xs text-center leading-tight px-1 transition-colors",
-                                    isSelected ? "text-blue-600" : "text-gray-800"
-                                )}>
-                                    {w.name}
-                                </span>
-                            </button>
-                        );
-                    })}
-                </div>
+                            <span className={clsx(
+                                "font-semibold text-[11px] text-center leading-tight px-1 transition-colors",
+                                isSelected ? "text-blue-600" : "text-gray-800"
+                            )}>
+                                {w.name}
+                            </span>
 
-                {/* More Button */}
-                {showFolding && remainingCount > 0 && (
+                            {/* Badge */}
+                            <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <span className="text-[8px] font-bold text-gray-300">EVM</span>
+                            </div>
+                        </button>
+                    );
+                })}
+
+                {/* + More Card: ONLY visible when EXPANDED */}
+                {isExpanded && activeTab === 'web3' && (
                     <button
-                        onClick={() => setIsExpanded(true)}
-                        className="w-full py-3 mb-4 flex items-center justify-center gap-2 text-xs font-bold text-gray-500 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200"
+                        onClick={() => setIsLibraryOpen(true)}
+                        className="group flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300 min-h-[100px] border border-dashed border-gray-300 bg-gray-50/50 hover:bg-gray-100 hover:border-gray-400"
                     >
-                        <span>Show more wallets</span>
-                        <ChevronDown size={14} />
+                        <div className="w-10 h-10 rounded-xl mb-2 flex items-center justify-center bg-transparent opacity-50 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                            {getWalletIcon('walletconnect')}
+                        </div>
+                        <span className="font-bold text-[11px] text-gray-500 group-hover:text-gray-700">
+                            + More
+                        </span>
                     </button>
                 )}
             </div>
+
+            {/* Show More Button (Only if NOT expanded and we have enough wallets) */}
+            {!isExpanded && activeTab === 'web3' && (
+                <div className="flex justify-center mt-0 pb-4">
+                    <button
+                        onClick={() => setIsExpanded(true)}
+                        className="w-full py-3 bg-gray-50 hover:bg-gray-100 rounded-xl text-xs font-bold text-gray-500 transition-colors flex items-center justify-center gap-1"
+                    >
+                        Show more wallets
+                        <ChevronDown size={14} />
+                    </button>
+                </div>
+            )}
+
+
+            {/* Library Overlay */}
+            <WalletLibrary
+                isOpen={isLibraryOpen}
+                onClose={() => setIsLibraryOpen(false)}
+                onSelect={(id) => {
+                    setIsLibraryOpen(false);
+                    onSelect(id);
+                }}
+                wallets={ALL_WALLETS}
+            />
         </div>
     )
 }

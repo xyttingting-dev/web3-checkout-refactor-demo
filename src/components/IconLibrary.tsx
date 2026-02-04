@@ -1,4 +1,3 @@
-import React from 'react';
 
 // === Wallet Icons ===
 export const IconBitget = () => (
@@ -82,6 +81,21 @@ export const IconTokenPocket = () => (
 );
 
 
+
+export const IconBankTransfer = () => (
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 18L20 10L34 18M8 18V34H32V18M14 24V28M20 24V28M26 24V28" stroke="#4B5563" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M2 34H38" stroke="#4B5563" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+);
+
+export const IconTransfer = () => (
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="40" height="40" rx="12" fill="#7C3AED" />
+        <path d="M12 20H28M28 20L22 14M28 20L22 26" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+);
+
 // === Network Icons ===
 
 export const IconTron = () => (
@@ -123,6 +137,7 @@ export const getWalletIcon = (id: string) => {
         case 'metamask': return <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" alt="MetaMask" className="w-full h-full object-contain" />;
         case 'walletconnect': return <img src="https://raw.githubusercontent.com/WalletConnect/walletconnect-assets/master/Logo/Blue%20(Default)/Logo.svg" alt="WC" className="w-full h-full object-contain" />;
         case 'tronlink': return <IconTron />;
+        case 'transfer': return <IconTransfer />;
         default: return null;
     }
 };

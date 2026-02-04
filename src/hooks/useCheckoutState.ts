@@ -3,11 +3,11 @@ import { useState, useCallback, useEffect } from 'react';
 import { useConnect, useDisconnect, useAccount } from 'wagmi';
 
 export type CheckoutState = 'SELECTION' | 'FOCUS' | 'PROCESSING' | 'HYBRID_ACTION' | 'FALLBACK' |
-    'CONNECTED_CHAIN_SELECT' | 'CONFIRMATION_PHASE' | 'AUTH_REQUEST' | 'SIGN_REQUEST' | 'SUCCESS' | 'FAIL' | 'DAPP_PAY' | 'DEBUG_INTERCEPT';
+    'CONNECTED_CHAIN_SELECT' | 'CONFIRMATION_PHASE' | 'AUTH_REQUEST' | 'SIGN_REQUEST' | 'SUCCESS' | 'FAIL' | 'DAPP_PAY' | 'DEBUG_INTERCEPT' | 'TRANSFER_FLOW';
 
 export type WalletId =
     | 'metamask' | 'bitget' | 'okx' | 'coinbase' | 'particle' | 'walletconnect' | 'imtoken' | 'coolwallet' | 'tronlink'
-    | 'binance' | 'binance_web3' | 'kucoin' | 'gate' | 'phantom' | 'trust' | 'rainbow' | 'rabbithole' | 'injected' | 'tokenpocket';
+    | 'binance' | 'binance_web3' | 'kucoin' | 'gate' | 'phantom' | 'trust' | 'rainbow' | 'rabbithole' | 'injected' | 'tokenpocket' | 'transfer';
 
 export interface CheckoutContext {
     state: CheckoutState;
@@ -51,6 +51,12 @@ export const useCheckoutState = (): CheckoutContext => {
     const selectWallet = useCallback((id: WalletId) => {
         console.log('[Audit] Selected wallet:', id);
         setSelectedWallet(id);
+
+        if (id === 'transfer') {
+            setState('TRANSFER_FLOW');
+            return;
+        }
+
         setState('FOCUS');
 
         // Simulate Centralized/Exchange vs Web3 logic
@@ -140,7 +146,7 @@ export const useCheckoutState = (): CheckoutContext => {
         setState('DAPP_PAY');
     }, []);
 
-    const confirmHybridAction = useCallback((type: 'custodial' | 'web3') => {
+    const confirmHybridAction = useCallback(() => {
         setState('PROCESSING');
         setTimeout(() => {
             setState('SUCCESS');

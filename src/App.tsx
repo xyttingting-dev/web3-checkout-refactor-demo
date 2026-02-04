@@ -16,6 +16,7 @@ import { DappBrowser } from './components/DappBrowser';
 import { PaymentSuccess } from './components/PaymentSuccess';
 import { PaymentFailed } from './components/PaymentFailed';
 import { SandboxSelector } from './components/SandboxSelector';
+import { AddressTransferPanel } from './components/AddressTransferPanel';
 
 function App() {
   const { state, selectedWallet, selectWallet, confirmHybridAction, selectChain, approveAuth, confirmSign, startDappPay, reset, selectPath, submitOrder } = useCheckoutState();
@@ -51,7 +52,7 @@ function App() {
         )}
 
         {/* Header */}
-        <MerchantHeader />
+        <MerchantHeader isSuccess={state === 'SUCCESS'} />
 
 
         {/* Content Area */}
@@ -103,6 +104,11 @@ function App() {
           {/* DApp Browser Simulation */}
           {state === 'DAPP_PAY' && (
             <DappBrowser onConfirm={confirmSign} />
+          )}
+
+          {/* New Flow: Address Pay (Transfer) */}
+          {state === 'TRANSFER_FLOW' && (
+            <AddressTransferPanel onBack={reset} />
           )}
 
           {/* Success */}

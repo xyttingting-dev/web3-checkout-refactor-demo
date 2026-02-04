@@ -1,10 +1,12 @@
 import React from 'react';
-import { CheckCircle2, Copy, Check } from 'lucide-react';
+import { CheckCircle2, Copy, Check, ArrowRight } from 'lucide-react';
 import { getNetworkIcon } from './IconLibrary';
 
-interface PaymentSuccessProps { }
+interface PaymentSuccessProps {
+    onViewHistory?: () => void;
+}
 
-export const PaymentSuccess: React.FC<PaymentSuccessProps> = () => {
+export const PaymentSuccess: React.FC<PaymentSuccessProps> = ({ onViewHistory }) => {
     const [copied, setCopied] = React.useState(false);
     const txHash = "0x7a...3f9c";
 
@@ -14,7 +16,7 @@ export const PaymentSuccess: React.FC<PaymentSuccessProps> = () => {
     }
 
     return (
-        <div className="w-full flex flex-col items-center justify-center pt-8 pb-4 animate-in fade-in zoom-in-95 duration-500 font-sans antialiased text-gray-900">
+        <div className="w-full flex flex-col items-center justify-center pt-8 pb-4 animate-in fade-in zoom-in-95 duration-500 font-sans antialiased text-gray-900 mt-12">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 relative">
                 <div className="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-50"></div>
                 <CheckCircle2 size={40} className="text-green-600 relative z-10" strokeWidth={2.5} />
@@ -68,7 +70,16 @@ export const PaymentSuccess: React.FC<PaymentSuccessProps> = () => {
             </div>
 
             {/* Navigation Locked - Dead End Text or Nothing */}
-            <div className="mt-8 text-center">
+            <div className="mt-8 text-center flex flex-col items-center gap-4">
+                {onViewHistory && (
+                    <button
+                        onClick={onViewHistory}
+                        className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 font-bold text-sm hover:underline transition-all"
+                    >
+                        View Transaction Records <ArrowRight size={14} strokeWidth={2.5} />
+                    </button>
+                )}
+
                 <p className="text-[10px] text-gray-300 uppercase tracking-widest font-bold">
                     Payment Complete
                 </p>

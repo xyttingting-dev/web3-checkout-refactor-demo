@@ -1,4 +1,3 @@
-import React from 'react';
 import { Settings, ShieldCheck, X, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 

@@ -1,5 +1,4 @@
-import React from 'react';
-import { X, CheckCircle, AlertOctagon, Smartphone } from 'lucide-react';
+import { X, CheckCircle, AlertOctagon } from 'lucide-react';
 
 interface DebugWalletModalProps {
     isOpen: boolean;
@@ -9,7 +8,7 @@ interface DebugWalletModalProps {
     walletName: string;
 }
 
-export const DebugWalletModal: React.FC<DebugWalletModalProps> = ({ isOpen, onClose, onSuccess, onFailure, walletName }) => {
+export const DebugWalletModal = ({ isOpen, onClose, onSuccess, onFailure, walletName }: DebugWalletModalProps) => {
     if (!isOpen) return null;
 
     return (

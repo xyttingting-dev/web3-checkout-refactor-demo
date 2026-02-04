@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ShieldCheck, ArrowRight, Loader2, Lock, X, RefreshCcw, CheckCircle2, AlertCircle } from 'lucide-react';
 import { NetworkSelector } from './NetworkSelector';
 import { motion, AnimatePresence } from 'framer-motion';

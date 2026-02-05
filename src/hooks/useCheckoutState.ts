@@ -39,9 +39,8 @@ export const useCheckoutState = (): CheckoutContext => {
     // ---------------------------------------------------------
     useEffect(() => {
         // Only trigger if we are actively trying to connect/process
-        // This ensures that if the user is ALREADY connected or matches connection rapidly, we move forward.
         if (state === 'PROCESSING' && isConnected) {
-            console.log('[Audit] isConnected detected while PROCESSING. Transitioning to Chain Select.');
+            // [Audit] Connection detected during processing -> Move to Chain Select
             setState('CONNECTED_CHAIN_SELECT');
         }
     }, [isConnected, state]);
@@ -50,7 +49,7 @@ export const useCheckoutState = (): CheckoutContext => {
     // 2. Wallet Selection (Trigger)
     // ---------------------------------------------------------
     const selectWallet = useCallback((id: WalletId) => {
-        console.log('[Audit] Selected wallet:', id);
+        // [Audit] User selected wallet: {id}
         setSelectedWallet(id);
 
         if (id === 'transfer') {
@@ -63,10 +62,10 @@ export const useCheckoutState = (): CheckoutContext => {
         // Simulate Centralized/Exchange vs Web3 logic
         setTimeout(() => {
             if (['binance', 'binance_web3'].includes(id)) {
-                console.log('[Audit] Binance Wallet -> Hybrid Action');
+                // [Audit] Branch: Hybrid Action (Binance)
                 setState('HYBRID_ACTION');
             } else {
-                console.log('[Audit] Standard Wallet -> Intercept Modal');
+                // [Audit] Branch: Standard Web3 -> Intercept/Connect
                 setState('DEBUG_INTERCEPT');
             }
         }, 600);
@@ -76,7 +75,7 @@ export const useCheckoutState = (): CheckoutContext => {
     // 3. Path Selection & Connection Logic (The Core)
     // ---------------------------------------------------------
     const selectPath = useCallback(async (path: 'success' | 'fail') => {
-        console.log('[Audit] Path selection triggered:', path);
+        // [Audit] Simulation Path Selected: {path}
         setState('PROCESSING'); // Start "Breathing" Animation
 
         if (path === 'success') {
@@ -86,7 +85,7 @@ export const useCheckoutState = (): CheckoutContext => {
                     // Logic Resurrection: "Double Reset"
                     // Check if already connected (via status or isConnected hook)
                     if (isConnected || connectStatus === 'success') {
-                        console.log('[Audit] Pre-flight: Disconnecting existing session...');
+                        // [Audit] Pre-flight: Disconnecting existing session to ensure clean state
                         await disconnectAsync();
                     }
 
@@ -96,38 +95,34 @@ export const useCheckoutState = (): CheckoutContext => {
                         throw new Error("No connector found");
                     }
 
-                    console.log('[Audit] Invoking connectAsync with:', connector.name);
-
-                    // Trigger Connection
+                    // [Audit] Invoking Web3 Connect
                     await connectAsync({ connector });
 
                     // Note: The useEffect above will catch 'isConnected' -> true and transition state.
-                    // But we keep this log for audit.
-                    console.log('[Audit] Connection promise resolved. Waiting for useEffect to pick up connection.');
                 } catch (error) {
-                    console.error('[Audit] Connection Failed:', error);
+                    console.error('[System] Connection Failed:', error);
                     setState('FALLBACK');
                 }
             }, 1000);
         } else {
             // Simulated Fail Path
             setTimeout(() => {
-                console.log('[Audit] Simulated Failure Path');
                 setState('FALLBACK');
             }, 1000);
         }
     }, [connectAsync, connectors, disconnectAsync, isConnected, connectStatus]);
 
     // ---------------------------------------------------------
-    // 4. Step Transitions
+    // 4. Step Transitions with State Comments
     // ---------------------------------------------------------
-    const selectChain = useCallback((chainId: string) => {
-        console.log('[Audit] Chain selected:', chainId);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const selectChain = useCallback((_chainId: string) => {
+        // [Audit] Chain Selected -> Logic: Move to Confirmation Phase
         setState('CONFIRMATION_PHASE');
     }, []);
 
     const submitOrder = useCallback(() => {
-        console.log('[Audit] Order submitted, triggering force success timer');
+        // [Audit] Order Submitted -> Logic: Trigger final success validation
         // Phase 5: Force Success Rule - Wait 1s then Success
         setState('PROCESSING');
         setTimeout(() => {
@@ -164,12 +159,11 @@ export const useCheckoutState = (): CheckoutContext => {
     }, []);
 
     const reselectChain = useCallback(() => {
-        console.log('[Audit] Reselecting chain, maintaining connection');
+        // [Audit] User requested reselect -> Maintain connection, return to chain list
         setState('CONNECTED_CHAIN_SELECT');
     }, []);
 
     const reset = useCallback(() => {
-        console.log('[Audit] Resetting state');
         setState('SELECTION');
         setSelectedWallet(null);
     }, []);

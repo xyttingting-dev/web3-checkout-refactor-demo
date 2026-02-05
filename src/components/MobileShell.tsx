@@ -21,6 +21,12 @@ export const MobileShell: React.FC<MobileShellProps> = ({ environment, children 
         <div
             className={`relative w-[375px] h-[812px] bg-black rounded-[50px] border-[8px] border-gray-900 shadow-2xl transition-all duration-500 overflow-hidden flex flex-col ${isIOS ? 'font-sf' : 'font-roboto'}`}
         >
+            {/* 
+              [Note] Mobile Simulator Structure 
+              - Fixed w/h to match generic iPhone dimensions (375x812)
+              - Font switching: San Francisco (iOS) vs Roboto (Android) mock
+            */}
+
             {/* --- Status Bar Simulation --- */}
             <div className="w-full h-11 px-6 flex justify-between items-center text-white z-50 absolute top-0 left-0">
                 <span className="text-xs font-semibold">{isIOS ? '9:41' : '10:00'}</span>

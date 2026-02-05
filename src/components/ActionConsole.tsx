@@ -27,8 +27,10 @@ export const ActionConsole = ({ step, onComplete, onSwitchNetwork }: ActionConso
                     value: 0n // 0 ETH just to trigger prompt
                 });
             } catch (e) {
-                console.log("User rejected or failed", e);
-                // "Regardless of user action... force jump"
+                // [Audit] User rejected request or failed. 
+                // In production, we should handle this error gracefully.
+                // For demo, we force jump to success to show the flow.
+                console.error("Signature failed/rejected:", e);
             } finally {
                 // Force success outcome
                 setTimeout(() => {

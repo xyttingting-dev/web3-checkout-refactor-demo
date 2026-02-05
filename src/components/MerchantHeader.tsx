@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Check, Copy, ChevronDown, ChevronUp } from 'lucide-react';
+import { MerchantLogo } from './assets/MerchantLogo';
 
 interface MerchantHeaderProps {
     isSuccess?: boolean;
@@ -50,13 +51,7 @@ export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) =
                 <div className="relative z-20 flex flex-col items-center gap-2">
 
                     {/* 2. Refined Brand Box */}
-                    <div className="w-14 h-14 rounded-xl bg-white/10 backdrop-blur-md border border-white/10 shadow-xl p-1 flex items-center justify-center relative overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-30"></div>
-                        {/* Inner Logo Placeholder */}
-                        <div className="w-full h-full bg-white/90 rounded-lg flex items-center justify-center shadow-inner relative z-10">
-                            <span className="font-bold text-gray-400 text-[10px]">BP</span>
-                        </div>
-                    </div>
+                    <MerchantLogo />
 
                     {/* 3. Brand Name Tab (Style Frozen) */}
                     <div className="bg-white/10 backdrop-blur-md border border-white/10 px-6 py-2 rounded-lg shadow-xl relative overflow-hidden flex items-center justify-center min-h-[44px]">

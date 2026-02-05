@@ -59,7 +59,7 @@ export const WalletLibrary = ({ isOpen, onClose, onSelect, wallets, initialSearc
             onSelect(w.id as WalletId);
         } else {
             // Open QR Modal
-            console.log('[Audit] Opening QR Modal for:', w.name);
+            // [Audit] Opening QR Modal for: {w.name}
             setQrWallet(w);
         }
     };

@@ -27,6 +27,11 @@ function App() {
 
   return (
     <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center py-12 p-4 font-sans text-gray-900 relative transition-all duration-500 antialiased supports-[height:100cqh]:min-h-[100cqh]">
+      {/* 
+              [Note] iOS Viewport Height Fix
+              - min-h-[100dvh]: Dynamic viewport height for mobile browsers
+              - supports-[height:100cqh]: fallback or future-proof container query units
+            */}
 
       {/* Background Decor */}
       <div className="absolute top-0 -left-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob pointer-events-none"></div>
@@ -38,7 +43,7 @@ function App() {
         isVisible={environment === 'desktop'}
         onTriggerCase={(id) => {
           if (id === 'dapp_mode') startDappPay();
-          console.log('Test Trigger:', id);
+          // [Debug] Test Trigger: {id}
         }}
       />
 

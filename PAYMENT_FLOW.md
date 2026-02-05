@@ -93,44 +93,92 @@ sequenceDiagram
     UI-->>User: 展示错误提示 + "Try Address Transfer" 选项
 
     %% ============================================================
-    %% 场景 4: 手动转账 (Address Transfer) - 含差额处理
+    %% 场景 4: 手动转账 (Address Transfer)
     %% ============================================================
-    Note over User, Chain: 场景 4: 手动地址转账与差额处理 (Address Transfer & Amount Logic)
+    Note over User, Chain: 场景 4: 手动地址转账 (Address Transfer)
 
-    User->>UI: 点击 "Address Transfer"
+    User->>UI: 点击 "Address Transfer" 或从降级页进入
     UI->>Hook: selectWallet('transfer')
     Hook-->>UI: 状态变更为 TRANSFER_FLOW
-    
-    User->>UI: 点击 "Generate Address"
-    UI->>Chain: 请求充值地址 (API)
-    Chain-->>UI: 返回 Address & 锁定汇率
-    UI-->>User: 展示 QR Code, Address, 应付金额 ($20.00 / 20 USDT)
+    UI-->>User: 展示 AddressTransferPanel
 
-    User->>Chain: 用户通过交易所/冷钱包转账
-    
-    rect rgb(255, 240, 245)
-        Note right of Chain: 后端异步监听 (Backend Listener)
-        Chain->>Hook: WebSocket/Polling 推送入账事件
+    User->>UI: 选择网络 (例如 BSC)
+    User->>UI: 点击 "Generate Address"
+    UI-->>User: 展示充值地址 + QR Code
+
+    Note over User, UI: 用户在外部钱包完成转账
+
+    %% ============================================================
+    %% 场景 4.1: 少付 (Partial Payment)
+    %% ============================================================
+    rect rgb(255, 250, 240)
+        Note right of User: 分支 A: 少付场景 (Partial Payment)
+        User->>UI: 点击 "Check Payment Result" (搜索图标)
+        UI->>Chain: 查询链上交易记录
+        Chain-->>UI: 返回交易: 15.00 USDT (少于 20.00)
+        UI->>UI: 更新状态为 PARTIAL_PAID
+        UI-->>User: 显示支付进度卡片
+        Note over UI: 已付: 15.00 USDT<br/>待付: 5.00 USDT
         
-        alt 足额支付 (Exact Amount)
-            Hook-->>UI: 状态变更为 SUCCESS
-            UI-->>User: 展示“支付成功”
-        
-        else 少付 (Underpayment)
-            Hook-->>UI: 状态变更为 PARTIAL_PAYMENT
-            UI-->>User: 警告弹窗: "Received: 18 USDT, Remaining: 2 USDT"
-            User->>Chain: 补齐剩余金额
-            Chain->>Hook: 检测到补单 -> SUCCESS
-        
-        else 多付 (Overpayment)
-            Hook-->>UI: 状态变更为 OVER_PAYMENT
-            UI-->>User: 提示成功 "Paid 22 USDT. Excess 2 USDT will be credited."
-            Hook-->>UI: 延迟跳转 SUCCESS
-        end
+        User->>UI: 再次转账剩余金额
+        User->>UI: 再次点击 "Check Payment Result"
+        UI->>Chain: 查询链上交易记录
+        Chain-->>UI: 返回新交易: +5.00 USDT
+        UI->>UI: 累计金额 = 20.00, 状态变更为 SUCCESS
+        UI->>Hook: setTransferSuccess(true)
+        UI-->>User: 展示支付成功页 (PaymentSuccess)
     end
 
-    User->>UI: 点击 "I Have Transferred" (手动触发查询)
-    UI->>Chain: 主动查询订单状态
-    Chain-->>UI: 返回当前入账金额
-    UI-->>User: 根据上述逻辑展示对应状态
+    %% ============================================================
+    %% 场景 4.2: 多付 (Overpayment)
+    %% ============================================================
+    rect rgb(240, 255, 240)
+        Note right of User: 分支 B: 多付场景 (Overpayment)
+        User->>UI: 点击 "Check Payment Result"
+        UI->>Chain: 查询链上交易记录
+        Chain-->>UI: 返回交易: 25.00 USDT (多于 20.00)
+        UI->>UI: 更新状态为 OVER_PAID
+        UI-->>User: 展示支付成功页 + 多付提示
+        Note over UI: 实付: 25.00 USDT<br/>订单金额: 20.00 USDT<br/>多付: 5.00 USDT (将退回)
+    end
+
+    %% ============================================================
+    %% 场景 4.3: 正常支付 (Exact Payment)
+    %% ============================================================
+    rect rgb(240, 248, 255)
+        Note right of User: 分支 C: 精确支付 (Exact Payment)
+        User->>UI: 点击 "Check Payment Result"
+        UI->>Chain: 查询链上交易记录
+        Chain-->>UI: 返回交易: 20.00 USDT (精确匹配)
+        UI->>UI: 更新状态为 SUCCESS
+        UI->>Hook: setTransferSuccess(true)
+        UI-->>User: 展示支付成功页 (PaymentSuccess)
+    end
 ```
+
+## 测试用例建议
+
+基于以上时序图，QA 团队应重点覆盖以下测试场景：
+
+### 1. Web3 连接测试
+- ✅ 正常连接流程 (MetaMask/OKX/Binance)
+- ✅ 用户拒绝连接
+- ✅ 网络超时/连接失败
+- ✅ 重复连接 (Double Reset 验证)
+
+### 2. 支付执行测试
+- ✅ 正常签名并广播
+- ✅ 用户拒绝签名
+- ✅ Gas 不足
+- ✅ 网络拥堵导致超时
+
+### 3. 手动转账测试
+- ✅ **少付场景:** 分多次转账直至满足订单金额
+- ✅ **多付场景:** 单次转账超过订单金额
+- ✅ **精确支付:** 单次转账恰好等于订单金额
+- ✅ 地址复制功能
+- ✅ QR Code 生成与扫描
+
+### 4. 异常降级测试
+- ✅ 连接失败自动跳转至 Fallback 页面
+- ✅ Fallback 页面的 "Try Address Transfer" 功能

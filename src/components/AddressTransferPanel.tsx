@@ -10,9 +10,10 @@ export type TransferStatus = 'WAITING' | 'SCANNING' | 'PARTIAL_PAID' | 'OVER_PAI
 interface AddressTransferPanelProps {
     onStatusChange?: (status: TransferStatus) => void;
     onBack?: () => void;
+    onSuccess?: () => void;
 }
 
-export const AddressTransferPanel = ({ onStatusChange, onBack }: AddressTransferPanelProps) => {
+export const AddressTransferPanel = ({ onStatusChange, onBack, onSuccess }: AddressTransferPanelProps) => {
     const [selectedChain, setSelectedChain] = useState<string | null>(null);
     const [addressGenerated, setAddressGenerated] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -74,6 +75,9 @@ export const AddressTransferPanel = ({ onStatusChange, onBack }: AddressTransfer
                 setReceivedAmount(newAmount);
                 setStatus(newStatus);
                 onStatusChange?.(newStatus);
+                if (newStatus === 'SUCCESS') {
+                    onSuccess?.();
+                }
             }
 
         }, 3000);
@@ -104,21 +108,23 @@ export const AddressTransferPanel = ({ onStatusChange, onBack }: AddressTransfer
     return (
         <div className="flex flex-col h-full space-y-4 font-sans antialiased">
 
-            {/* Header with Title & Back Button */}
-            <div className="flex items-center justify-between pb-2">
-                <div className="flex items-center gap-2">
-                    {onBack && (
-                        <button
-                            onClick={onBack}
-                            className="p-1.5 -ml-2 text-gray-400 hover:text-gray-700 bg-transparent hover:bg-gray-100 rounded-lg transition-all"
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-                    )}
-                    <span className="font-bold text-lg text-gray-900">Transfer</span>
+            {/* Header with Title & Back Button - Hidden on Success */}
+            {status !== 'SUCCESS' && status !== 'OVER_PAID' && (
+                <div className="flex items-center justify-between pb-2">
+                    <div className="flex items-center gap-2">
+                        {onBack && (
+                            <button
+                                onClick={onBack}
+                                className="p-1.5 -ml-2 text-gray-400 hover:text-gray-700 bg-transparent hover:bg-gray-100 rounded-lg transition-all"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                        )}
+                        <span className="font-bold text-lg text-gray-900">Transfer</span>
+                    </div>
                 </div>
-            </div>
 
+            )}
             {!addressGenerated ? (
                 <>
                     {/* Step 1: Network Selection */}
@@ -174,7 +180,15 @@ export const AddressTransferPanel = ({ onStatusChange, onBack }: AddressTransfer
                             </button>
                         </div>
                     ) : status === 'OVER_PAID' || status === 'SUCCESS' ? (
-                        <PaymentSuccess onViewHistory={() => setShowHistory(true)} />
+                        <PaymentSuccess
+                            onViewHistory={() => setShowHistory(true)}
+                            amount={receivedAmount}
+                            currency="USDT"
+                            network={selectedChain || 'eth'}
+                            txTime={transactions[transactions.length - 1]?.time || new Date().toLocaleTimeString()}
+                            txId={`TX-${Math.floor(Math.random() * 100000000)}`}
+                            hash={transactions[transactions.length - 1]?.hash || "0x..."}
+                        />
                     ) : (
                         <>
                             {status === 'PARTIAL_PAID' ? (

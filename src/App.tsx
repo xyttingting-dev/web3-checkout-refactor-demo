@@ -19,8 +19,10 @@ import { SandboxSelector } from './components/SandboxSelector';
 import { AddressTransferPanel } from './components/AddressTransferPanel';
 
 function App() {
+  // In App component
   const { state, selectedWallet, selectWallet, confirmHybridAction, selectChain, approveAuth, confirmSign, startDappPay, reset, selectPath, submitOrder } = useCheckoutState();
   const [environment, setEnvironment] = useState<EnvironmentMode>('desktop');
+  const [transferSuccess, setTransferSuccess] = useState(false);
 
 
   return (
@@ -52,7 +54,7 @@ function App() {
         )}
 
         {/* Header */}
-        <MerchantHeader isSuccess={state === 'SUCCESS'} />
+        <MerchantHeader isSuccess={state === 'SUCCESS' || transferSuccess} />
 
 
         {/* Content Area */}
@@ -111,7 +113,10 @@ function App() {
 
           {/* New Flow: Address Pay (Transfer) */}
           {state === 'TRANSFER_FLOW' && (
-            <AddressTransferPanel onBack={reset} />
+            <AddressTransferPanel
+              onBack={reset}
+              onSuccess={() => setTransferSuccess(true)}
+            />
           )}
 
           {/* Success */}

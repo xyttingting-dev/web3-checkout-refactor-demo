@@ -96,6 +96,12 @@
   @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;
 }
 
+@layer utilities {
+  .scrolling-touch {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
 /* Ant Design Global Overrides */
 :root {
   --ant-primary-color: #4F46E5;
@@ -111,7 +117,7 @@
 }
 
 .ant-btn-primary {
-  @apply bg-indigo-600 shadow-lg shadow-indigo-500/30 border-none hover:!bg-indigo-500 hover:scale-105 transition-all duration-300;
+  @apply bg-indigo-600 shadow-lg shadow-indigo-500/30 border-none hover:bg-indigo-500 hover:scale-105 transition-all duration-300;
 }
 
 .ant-input {

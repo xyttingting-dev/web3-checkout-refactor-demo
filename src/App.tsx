@@ -24,11 +24,11 @@ function App() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 p-4 font-sans text-gray-900 relative transition-all duration-500 overflow-hidden antialiased">
+    <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center py-12 p-4 font-sans text-gray-900 relative transition-all duration-500 antialiased supports-[height:100cqh]:min-h-[100cqh]">
 
       {/* Background Decor */}
-      <div className="absolute top-0 -left-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-      <div className="absolute top-0 -right-20 w-96 h-96 bg-fuchsia-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+      <div className="absolute top-0 -left-20 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob pointer-events-none"></div>
+      <div className="absolute top-0 -right-20 w-96 h-96 bg-fuchsia-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 pointer-events-none"></div>
 
       {/* Sidebars (Desktop Only) */}
       <EnvironmentSwitcher currentMode={environment} onSwitch={setEnvironment} />
@@ -56,7 +56,10 @@ function App() {
 
 
         {/* Content Area */}
-        <div className={`w-full px-5 pt-4 relative flex-1 flex flex-col overflow-y-auto custom-scrollbar ${environment === 'android' ? 'pb-12' : 'pb-1'}`}>
+        <div
+          className={`w-full px-5 pt-4 relative flex-1 flex flex-col custom-scrollbar scrolling-touch !overflow-y-auto ${environment === 'android' ? 'pb-24' : 'pb-20'}`}
+          style={{ WebkitOverflowScrolling: 'touch', overflowY: 'auto' }}
+        >
 
           {/* Wallet Grid (Selection Phase) */}
           {(state === 'SELECTION' || state === 'FOCUS' || state === 'PROCESSING') && (
@@ -119,7 +122,10 @@ function App() {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 flex justify-between items-center text-[10px] text-gray-400 font-medium mt-0 bg-white/50 backdrop-blur-sm z-10 font-sans">
+        <div
+          className="absolute bottom-0 w-full px-5 py-3 flex justify-between items-center text-[10px] text-gray-400 font-medium bg-white/60 backdrop-blur-md z-50 font-sans border-t border-white/20 flex-shrink-0"
+          style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 20px))' }}
+        >
           <div className="flex gap-3">
             <button className="hover:text-gray-600 transition-colors">Privacy</button>
             <div className="w-px h-3 bg-gray-300"></div>

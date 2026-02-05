@@ -1,12 +1,12 @@
 
 import { useState } from 'react';
 import type { WalletId, CheckoutState } from '../hooks/useCheckoutState';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 import { useConnectors } from 'wagmi';
 
 
-import { getWalletIcon, IconAvalanche, IconBSC, IconPolygon, IconTron, IconEthereum } from './IconLibrary';
+import { getWalletIcon } from './IconLibrary';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WalletLibrary } from './WalletLibrary';
 
@@ -214,24 +214,24 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                                     */}
 
                                     {/* Let's try to keep it clean. */}
-                                    <div className="flex-1 flex items-center justify-center w-full relative">
-                                        {/* Chain Icons as the 'Main Visual' in the center */}
-                                        <div className="flex -space-x-1 items-center justify-center">
-                                            <div className="w-5 h-5 rounded-full border border-white bg-white z-[5]"><IconAvalanche /></div>
-                                            <div className="w-5 h-5 rounded-full border border-white bg-white z-[4]"><IconBSC /></div>
-                                            <div className="w-5 h-5 rounded-full border border-white bg-white z-[3]"><IconPolygon /></div>
-                                            <div className="w-5 h-5 rounded-full border border-white bg-white z-[2]"><IconTron /></div>
-                                            <div className="w-5 h-5 rounded-full border border-white bg-white z-[1]"><IconEthereum /></div>
+                                    <div className="flex-1 flex flex-col items-center justify-center w-full relative gap-1">
+
+                                        {/* Top: Chain Icons + More Label */}
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            {/* 4 Logos First */}
+                                            <div className="w-5 h-5 rounded-full bg-gray-100 border border-white shadow-sm"></div>
+                                            <div className="w-5 h-5 rounded-full bg-gray-100 border border-white shadow-sm"></div>
+                                            <div className="w-5 h-5 rounded-full bg-gray-100 border border-white shadow-sm"></div>
+                                            <div className="w-5 h-5 rounded-full bg-gray-100 border border-white shadow-sm"></div>
+
+                                            {/* 'More' Label Last */}
+                                            <span className="text-[10px] text-gray-400 font-medium leading-none">More</span>
                                         </div>
 
-                                        {/* Chevron absolute right */}
-                                        <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1">
-                                            <ChevronRight size={14} className="text-gray-300" />
-                                        </div>
                                     </div>
 
                                     <span className={clsx(
-                                        "font-semibold text-[11px] text-center leading-tight px-1 transition-colors",
+                                        "font-normal text-xs text-center leading-tight px-1 transition-colors",
                                         isSelected ? "text-blue-600" : "text-gray-800"
                                     )}>
                                         Address Transfer
@@ -261,7 +261,7 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                             </motion.div>
 
                             <span className={clsx(
-                                "font-semibold text-[11px] text-center leading-tight px-1 transition-colors",
+                                "font-normal text-xs text-center leading-tight px-1 transition-colors",
                                 isSelected ? "text-blue-600" : "text-gray-800"
                             )}>
                                 {w.name}

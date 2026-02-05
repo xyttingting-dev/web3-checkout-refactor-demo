@@ -49,18 +49,18 @@ export const MobileShell: React.FC<MobileShellProps> = ({ environment, children 
             )}
 
             {/* Screen Content */}
-            <div className="flex-1 bg-gray-50 flex flex-col pt-12 relative overflow-hidden rounded-[42px]">
+            <div className="flex-1 bg-gray-50 flex flex-col pt-12 relative overflow-hidden rounded-t-[42px] rounded-b-[42px]">
                 {children}
-
-                {/* Android Navigation Bar (Static Flow) */}
-                {!isIOS && (
-                    <div className="h-12 bg-black w-full flex justify-between items-center px-12 z-50 shrink-0 text-gray-400">
-                        <div className="w-4 h-4 border-l-2 border-b-2 border-current transform rotate-45"></div> {/* Back */}
-                        <div className="w-4 h-4 rounded-full border-2 border-current"></div> {/* Home */}
-                        <div className="w-4 h-4 border-2 border-current rounded-sm"></div> {/* Recent */}
-                    </div>
-                )}
             </div>
+
+            {/* Android Navigation Bar (Static Flow) - Moved Outside for correct layout */}
+            {!isIOS && (
+                <div className="h-12 bg-black w-full flex justify-between items-center px-12 z-50 shrink-0 text-gray-400 rounded-b-[42px] mt-[-10px] pb-2 relative">
+                    <div className="w-4 h-4 border-l-2 border-b-2 border-current transform rotate-45"></div> {/* Back */}
+                    <div className="w-4 h-4 rounded-full border-2 border-current"></div> {/* Home */}
+                    <div className="w-4 h-4 border-2 border-current rounded-sm"></div> {/* Recent */}
+                </div>
+            )}
 
             {/* --- Navigation Bar (iOS Only) --- */}
             {isIOS && (

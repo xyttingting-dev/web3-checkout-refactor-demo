@@ -69,9 +69,13 @@ export const ActionConsole = ({ step, onComplete, onSwitchNetwork }: ActionConso
                             <span className="text-sm font-semibold text-gray-900">Ethereum</span>
                         </div>
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between items-center pb-3 border-b border-gray-200">
                         <span className="text-xs font-medium text-gray-400">Merchant</span>
                         <span className="text-sm font-semibold text-gray-900">BonusPay Global</span>
+                    </div>
+                    <div className="flex justify-between items-baseline pt-1">
+                        <span className="text-xs font-medium text-gray-400">Total Amount</span>
+                        <span className="text-2xl font-black text-gray-900">20.00 <span className="text-sm font-medium text-gray-500">USDT</span></span>
                     </div>
                 </div>
 

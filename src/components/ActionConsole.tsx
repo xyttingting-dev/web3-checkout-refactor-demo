@@ -7,9 +7,10 @@ import { useSendTransaction } from 'wagmi';
 interface ActionConsoleProps {
     step: 'AUTH' | 'SIGN' | 'CONFIRMATION';
     onComplete: () => void;
+    onSwitchNetwork?: () => void;
 }
 
-export const ActionConsole = ({ step, onComplete }: ActionConsoleProps) => {
+export const ActionConsole = ({ step, onComplete, onSwitchNetwork }: ActionConsoleProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const { sendTransactionAsync } = useSendTransaction();
 
@@ -46,8 +47,19 @@ export const ActionConsole = ({ step, onComplete }: ActionConsoleProps) => {
 
     if (step === 'CONFIRMATION') {
         return (
-            <div className="flex flex-col animate-in fade-in zoom-in-95 duration-300 h-full">
-                <h3 className="text-lg font-black text-gray-900 mb-6 text-center">Confirm Order</h3>
+            <div className="flex flex-col animate-in fade-in zoom-in-95 duration-300 h-full pt-4">
+                <h3 className="text-xl font-black text-gray-900 text-center mb-1">Confirm Order</h3>
+
+                {onSwitchNetwork && (
+                    <div className="flex justify-center mb-6">
+                        <button
+                            onClick={onSwitchNetwork}
+                            className="text-[10px] font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                        >
+                            Switch Network
+                        </button>
+                    </div>
+                )}
 
                 <div className="bg-gray-50 rounded-2xl p-6 space-y-3 border border-gray-100 flex-1">
                     <div className="flex justify-between items-center pb-3 border-b border-gray-200">
@@ -57,13 +69,9 @@ export const ActionConsole = ({ step, onComplete }: ActionConsoleProps) => {
                             <span className="text-sm font-semibold text-gray-900">Ethereum</span>
                         </div>
                     </div>
-                    <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+                    <div className="flex justify-between items-center">
                         <span className="text-xs font-medium text-gray-400">Merchant</span>
                         <span className="text-sm font-semibold text-gray-900">BonusPay Global</span>
-                    </div>
-                    <div className="flex justify-between items-baseline pt-1">
-                        <span className="text-xs font-medium text-gray-400">Total Amount</span>
-                        <span className="text-2xl font-black text-gray-900">20.00 <span className="text-sm font-medium text-gray-500">USDT</span></span>
                     </div>
                 </div>
 

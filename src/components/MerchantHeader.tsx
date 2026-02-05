@@ -3,9 +3,10 @@ import { Check, Copy, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface MerchantHeaderProps {
     isSuccess?: boolean;
+    hideAmount?: boolean;
 }
 
-export const MerchantHeader = ({ isSuccess }: MerchantHeaderProps) => {
+export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) => {
     const [copied, setCopied] = useState<string | null>(null);
     const [showDetails, setShowDetails] = useState(false);
 
@@ -80,64 +81,66 @@ export const MerchantHeader = ({ isSuccess }: MerchantHeaderProps) => {
 
             {/* === 3. 数据展示区域 (Data Display) === */}
             {/* Adjusted padding sine image is gone */}
-            <div className="pt-4 px-5 flex flex-col items-center justify-center min-h-[60px] relative mt-0 text-center">
+            {!hideAmount && (
+                <div className="pt-4 px-5 flex flex-col items-center justify-center min-h-[60px] relative mt-0 text-center">
 
 
-                <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-[32px] font-bold text-gray-900 tracking-tight leading-none" style={{ letterSpacing: '-0.02em' }}>20.00</span>
-                    <span className="text-sm font-semibold text-gray-500">USDT</span>
+                    <div className="flex items-baseline gap-2 mb-2">
+                        <span className="text-[32px] font-bold text-gray-900 tracking-tight leading-none" style={{ letterSpacing: '-0.02em' }}>20.00</span>
+                        <span className="text-sm font-semibold text-gray-500">USDT</span>
+                    </div>
+
+                    <div className="text-xs text-gray-400 font-medium mb-2">≈ $20.00 USD</div>
+
+                    {/* Details Button - Centered in its own row */}
+                    <button
+                        onClick={() => setShowDetails(!showDetails)}
+                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-100/80 hover:bg-gray-200/80 text-gray-500 rounded-full transition-all active:scale-95 group"
+                    >
+                        <span className="text-sm font-semibold group-hover:text-gray-700">Details</span>
+                        {showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
                 </div>
-
-                <div className="text-xs text-gray-400 font-medium mb-2">≈ $20.00 USD</div>
-
-                {/* Details Button - Centered in its own row */}
-                <button
-                    onClick={() => setShowDetails(!showDetails)}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-gray-100/80 hover:bg-gray-200/80 text-gray-500 rounded-full transition-all active:scale-95 group"
-                >
-                    <span className="text-sm font-semibold group-hover:text-gray-700">Details</span>
-                    {showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                </button>
-            </div>
+            )}
 
             {/* === 4. 折叠详情区域 === */}
-            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showDetails ? 'max-h-24 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
-                <div className="px-5 pb-2 pt-0 space-y-3">
-
-
-                    <div className="flex justify-between items-center group">
-                        <span className="text-xs text-gray-400 font-medium min-w-[30%] text-left">Merchant Order</span>
-                        <div className="text-right flex items-center justify-end gap-1.5 flex-1 min-w-0">
-                            <span className="text-sm font-semibold text-gray-900 break-all leading-tight text-right">
-                                {fullMerchantOrder}
-                            </span>
-                            <button
-                                onClick={() => handleCopy(fullMerchantOrder, 'Order ID')}
-                                className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-indigo-600 flex-shrink-0"
-                                title="Copy Order ID"
-                            >
-                                {copied === 'Order ID' ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
-                            </button>
+            {!hideAmount && (
+                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showDetails ? 'max-h-24 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
+                    <div className="px-5 pb-2 pt-0 space-y-3">
+                        <div className="flex justify-between items-center group">
+                            <span className="text-xs text-gray-400 font-medium min-w-[30%] text-left">Merchant Order</span>
+                            <div className="text-right flex items-center justify-end gap-1.5 flex-1 min-w-0">
+                                <span className="text-sm font-semibold text-gray-900 break-all leading-tight text-right">
+                                    {fullMerchantOrder}
+                                </span>
+                                <button
+                                    onClick={() => handleCopy(fullMerchantOrder, 'Order ID')}
+                                    className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-indigo-600 flex-shrink-0"
+                                    title="Copy Order ID"
+                                >
+                                    {copied === 'Order ID' ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                                </button>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="flex justify-between items-center group">
-                        <span className="text-xs text-gray-400 font-medium min-w-[30%] text-left">Transaction ID</span>
-                        <div className="text-right flex items-center justify-end gap-1.5 flex-1 min-w-0">
-                            <span className="text-sm font-semibold text-gray-900 break-all leading-tight text-right">
-                                {fullTxId}
-                            </span>
-                            <button
-                                onClick={() => handleCopy(fullTxId, 'Tx ID')}
-                                className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-indigo-600 flex-shrink-0"
-                                title="Copy Transaction ID"
-                            >
-                                {copied === 'Tx ID' ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
-                            </button>
+                        <div className="flex justify-between items-center group">
+                            <span className="text-xs text-gray-400 font-medium min-w-[30%] text-left">Transaction ID</span>
+                            <div className="text-right flex items-center justify-end gap-1.5 flex-1 min-w-0">
+                                <span className="text-sm font-semibold text-gray-900 break-all leading-tight text-right">
+                                    {fullTxId}
+                                </span>
+                                <button
+                                    onClick={() => handleCopy(fullTxId, 'Tx ID')}
+                                    className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-indigo-600 flex-shrink-0"
+                                    title="Copy Transaction ID"
+                                >
+                                    {copied === 'Tx ID' ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

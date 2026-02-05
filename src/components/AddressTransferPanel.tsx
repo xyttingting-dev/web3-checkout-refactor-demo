@@ -95,6 +95,18 @@ export const AddressTransferPanel = ({ onStatusChange, onBack, onSuccess }: Addr
         setAddressGenerated(true);
     };
 
+    // Fix 1: Back Logic Intervention
+    const handleBack = () => {
+        if (addressGenerated) {
+            // Return to Network Selection
+            setAddressGenerated(false);
+            setStatus('WAITING');
+        } else {
+            // Return to Home (Wallet Grid)
+            onBack?.();
+        }
+    };
+
     const handleCopy = () => {
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
@@ -114,7 +126,7 @@ export const AddressTransferPanel = ({ onStatusChange, onBack, onSuccess }: Addr
                     <div className="flex items-center gap-2">
                         {onBack && (
                             <button
-                                onClick={onBack}
+                                onClick={handleBack}
                                 className="p-1.5 -ml-2 text-gray-400 hover:text-gray-700 bg-transparent hover:bg-gray-100 rounded-lg transition-all"
                             >
                                 <ChevronLeft size={20} />

@@ -22,6 +22,7 @@ export interface CheckoutContext {
     selectPath: (path: 'success' | 'fail') => void;
     debugAction: (action: 'success' | 'fail' | 'retry') => void;
     submitOrder: () => void;
+    reselectChain: () => void;
 }
 
 export const useCheckoutState = (): CheckoutContext => {
@@ -162,6 +163,11 @@ export const useCheckoutState = (): CheckoutContext => {
         }
     }, []);
 
+    const reselectChain = useCallback(() => {
+        console.log('[Audit] Reselecting chain, maintaining connection');
+        setState('CONNECTED_CHAIN_SELECT');
+    }, []);
+
     const reset = useCallback(() => {
         console.log('[Audit] Resetting state');
         setState('SELECTION');
@@ -180,6 +186,7 @@ export const useCheckoutState = (): CheckoutContext => {
         reset,
         selectPath,
         debugAction,
-        submitOrder
+        submitOrder,
+        reselectChain
     };
 };

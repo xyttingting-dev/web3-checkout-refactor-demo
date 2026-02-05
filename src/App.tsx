@@ -20,7 +20,7 @@ import { AddressTransferPanel } from './components/AddressTransferPanel';
 
 function App() {
   // In App component
-  const { state, selectedWallet, selectWallet, confirmHybridAction, selectChain, approveAuth, confirmSign, startDappPay, reset, selectPath, submitOrder } = useCheckoutState();
+  const { state, selectedWallet, selectWallet, confirmHybridAction, selectChain, approveAuth, confirmSign, startDappPay, reset, selectPath, submitOrder, reselectChain } = useCheckoutState();
   const [environment, setEnvironment] = useState<EnvironmentMode>('desktop');
   const [transferSuccess, setTransferSuccess] = useState(false);
 
@@ -54,7 +54,10 @@ function App() {
         )}
 
         {/* Header */}
-        <MerchantHeader isSuccess={state === 'SUCCESS' || transferSuccess} />
+        <MerchantHeader
+          isSuccess={state === 'SUCCESS' || transferSuccess}
+          hideAmount={state === 'CONFIRMATION_PHASE'}
+        />
 
 
         {/* Content Area */}
@@ -84,6 +87,7 @@ function App() {
             <ActionConsole
               step={state === 'CONFIRMATION_PHASE' ? 'CONFIRMATION' : (state === 'AUTH_REQUEST' ? 'AUTH' : 'SIGN')}
               onComplete={state === 'CONFIRMATION_PHASE' ? submitOrder : (state === 'AUTH_REQUEST' ? approveAuth : confirmSign)}
+              onSwitchNetwork={state === 'CONFIRMATION_PHASE' ? reselectChain : undefined}
             />
           )}
 

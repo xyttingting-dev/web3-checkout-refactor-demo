@@ -1,104 +1,104 @@
-# BonusPay Checkout - Frontend Engineering Documentation
+# BonusPay Checkout - 前端工程化技术文档
 
-> **Status:** Handover Ready (v1.0.0)  
-> **Target Audience:** Frontend Developers / UI Engineers  
-> **Tech Stack:** React (Vite), Tailwind CSS, Framer Motion, Wagmi v2
+> **状态:** 已移交 (v1.0.0)
+> **目标读者:** 前端开发人员 / UI 工程师
+> **技术栈:** React (Vite), Tailwind CSS, Framer Motion, Wagmi v2
 
-This document serves as the "Operator's Manual" for the codebase, focusing on style architecture, mobile adaptation strategies, core component definitions, and Web3 integration logic.
+本文档作为本项目的“操作说明书”，重点阐述样式架构、移动端适配策略、核心组件定义以及 Web3 集成逻辑，旨在帮助人类开发人员快速上手。
 
 ---
 
-## 1. Style Architecture (Tailwind CSS)
+## 1. 样式架构 (Tailwind CSS)
 
-The project leverages **Tailwind CSS** with a customized configuration to achieve a modern, "Glassmorphism" aesthetic.
+本项目使用 **Tailwind CSS** 并配合深度自定义配置，以实现现代化的“毛玻璃 (Glassmorphism)”视觉风格。
 
-### 1.1 Configuration (`tailwind.config.js`)
-- **Font Family:** `Inter`, `system-ui`, `sans-serif`. (Optimized for readability).
-- **Animations:**
-    - `animate-float`: Gentle floating effect using `translateY`.
-    - `animate-breathe`: Subtle shadow pulsation.
-    - `animate-radar`: Scaling loop check for "Looking for wallet".
-    - `animate-blob`: Large background gradient blobs moving in a triangular path.
-- **Plugins:** `tailwindcss-animate` is included for granular delay control.
+### 1.1 配置详情 (`tailwind.config.js`)
+- **字体族:** 优先使用 `Inter`，回退至 `system-ui`, `sans-serif` (优化阅读体验)。
+- **核心动画:**
+    - `animate-float`: 使用 `translateY` 实现轻柔的悬浮效果。
+    - `animate-breathe`: 阴影呼吸效果。
+    - `animate-radar`: 用于“搜索钱包”时的雷达扫描扩散效果。
+    - `animate-blob`: 背景中大尺寸光斑的三角路径移动动画。
+- **插件:** 引入了 `tailwindcss-animate` 以实现更精细的延迟 (delay) 控制。
 
-### 1.2 Global Styles & Glassmorphism (`index.css`)
-- **Base Layer:** Background set to `bg-gray-50`, text `text-gray-900`.
-- **Utility Class: `.glass-panel`**
+### 1.2 全局样式与毛玻璃效果 (`index.css`)
+- **基础层:** 背景设定为 `bg-gray-50`，文本色 `text-gray-900`。
+- **工具类: `.glass-panel`**
     - `@apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl;`
-    - Use this class for any card or overlay that needs the signature frosted glass look.
-- **Ant Design Overrides:**
-    - Global variable override: `--ant-primary-color: #4F46E5` (Indigo 600).
-    - Buttons and Inputs are forced to match Tailwind's `rounded-xl` and shadow tokens using `@apply !important`.
+    - **规范:** 任何需要实现“磨砂玻璃”质感的卡片或浮层，都必须添加此 Class。
+- **Ant Design 样式覆盖:**
+    - 全局主色变量覆盖: `--ant-primary-color: #4F46E5` (Indigo 600)。
+    - 按钮与输入框: 使用 `@apply !important` 强制统一为 Tailwind 的 `rounded-xl` 圆角和阴影风格。
 
 ---
 
-## 2. Mobile Adaptation Strategy
+## 2. 移动端适配策略
 
-The application is designed to run flawlessly on mobile browsers and within embedded webviews (e.g., wallet dApp browsers).
+本项目设计目标为：在原生移动浏览器和内嵌 Webview (如钱包 dApp 浏览器) 中均能完美运行。
 
-### 2.1 Viewport Height Fix (`App.tsx`)
-We use dynamic viewport units to prevent the address bar from covering content on iOS Safari.
+### 2.1 视口高度修正 (`App.tsx`)
+使用动态视口单位，防止 iOS Safari 地址栏遮挡底部内容。
 ```tsx
 className="min-h-[100dvh] ... supports-[height:100cqh]:min-h-[100cqh]"
 ```
-- **`100dvh`**: "Dynamic Viewport Height" - adapts when the address bar expands/collapses.
-- **`100cqh`**: Container Query Height fallback for future-proofing.
+- **`100dvh`**: "Dynamic Viewport Height" - 会随地址栏的展开/由于自动伸缩。
+- **`100cqh`**: Container Query Height，作为面向未来的降级方案。
 
-### 2.2 Scroll Locking & Safe Area (`MobileShell.tsx` & `App.tsx`)
-- **Safe Area:** The Footer includes explicit padding for iPhone X+ home indicators:
+### 2.2 滚动锁定与安全区 (`MobileShell.tsx` & `App.tsx`)
+- **安全区 (Safe Area):** Footer 底部增加了显式 padding 以适配 iPhone X+ 的 Home Indicator：
   ```tsx
   style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 20px))' }}
   ```
-- **Scroll Behavior:**
-  - `overflow-hidden` is applied to the main container to prevent "body bounce".
-  - The content area uses `scrolling-touch` (iOS legacy support) and `overflow-y-auto` for smooth internal scrolling.
+- **滚动行为:**
+  - 主容器使用 `overflow-hidden` 防止“橡皮筋”回弹效果。
+  - 内容区域使用 `scrolling-touch` (iOS 惯性滚动支持) 和 `overflow-y-auto` 确保内部流畅滚动。
 
-### 2.3 Mobile Simulator
-- **Logic:** `MobileShell` component conditionally renders a device frame (iPhone/Android) on Desktop, but renders a simple `div` wrapper on actual mobile devices.
-- **Device Detection:** Controlled via the `EnvironmentSwitcher`, not user agent sniffing (for development stability).
+### 2.3 移动端模拟器
+- **逻辑:** `MobileShell` 组件在桌面端 (Desktop) 会渲染一个高仿真的 iPhone/Android 手机壳，但在真实移动设备上会回退为简单的 `div` 容器。
+- **设备检测:** 通过 `EnvironmentSwitcher` 全局状态控制，而非不可靠的 User Agent 嗅探。
 
 ---
 
-## 3. Core Component Index
+## 3. 核心组件索引
 
-Key components that drive the checkout flow.
+以下是驱动收银台流程的关键业务组件。
 
-| Component | Responsibility | Key Props/State |
+| 组件 | 职责描述 | 关键 Props/State |
 | :--- | :--- | :--- |
-| **`MerchantHeader.tsx`** | Displays Brand Banner, Logo, and Order IDs. | `isSuccess`: Hides amount/details on success.<br>`hideAmount`: **New in v1.0**, cleans up confirmation page header. |
-| **`WalletGrid.tsx`** | 3x3 Grid for wallet selection. Handles "More" expansion. | Auto-sorts usage (Injected > Others).<br>Adapts to `DEBUG_INTERCEPT` flow. |
-| **`ActionConsole.tsx`** | The "Confirm Order" page. logic. | `step`: 'AUTH' \| 'SIGN' \| 'CONFIRMATION'.<br>`onSwitchNetwork`: Triggers chain re-selection while maintaining session. |
-| **`AddressTransferPanel.tsx`** | Fallback manual transfer UI. | **Crucial Fix:** Back button logic branches based on whether an address was generated. |
-| **`MobileShell.tsx`** | Device simulator wrapper. | `environment`: 'ios' \| 'android' \| 'desktop'. Handles font switching (San Francisco vs Roboto). |
+| **`MerchantHeader.tsx`** | 展示顶部商户 Banner、Logo 及订单 ID。 | `isSuccess`: 成功态隐藏金额。<br>`hideAmount`: **v1.0 新增**，用于确认页“去噪”，仅隐藏金额保留商户名。 |
+| **`WalletGrid.tsx`** | 3x3 钱包选择网格，含“展开更多”功能。 | 自动排序 (Injected 优先)。<br>适配 `DEBUG_INTERCEPT` 拦截流。 |
+| **`ActionConsole.tsx`** | “确认订单”页面的核心交互区。 | `step`: 'AUTH' \| 'SIGN' \| 'CONFIRMATION'。<br>`onSwitchNetwork`: 触发换链操作并保持会话连接。 |
+| **`AddressTransferPanel.tsx`** | 兜底的手动转账 UI。 | **关键修复:** 返回按钮逻辑已分流，已生成地址时返回“选链页”，未生成时返回“首页”。 |
+| **`MobileShell.tsx`** | 移动端真机模拟外壳。 | `environment`: 'ios' \| 'android' \| 'desktop'。<br>自动切换字体 (San Francisco vs Roboto)。 |
 
 ---
 
-## 4. Web3 Integration (Wagmi v2)
+## 4. Web3 集成逻辑 (Wagmi v2)
 
-The project uses `wagmi` with `viem` for blockchain interactions.
+本项目基于 `wagmi` 和 `viem` 处理区块链交互。
 
-### 4.1 Configuration (`wagmi.ts`)
-- **Chains:** Mainnet, BSC, Polygon.
-- **Connectors:** `injected({ shimDisconnect: true })`.
-- **Transports:** HTTP default.
+### 4.1 基础配置 (`wagmi.ts`)
+- **链:** Mainnet (主网), BSC, Polygon。
+- **连接器:** `injected({ shimDisconnect: true })` (支持 MetaMask 等插件钱包)。
+- **传输层:** 默认 HTTP 传输。
 
-### 4.2 Connection Logic (`useCheckoutState.ts`)
-The `useCheckoutState` hook acts as a finite state machine (FSM).
-1.  **Selection:** User picks wallet.
-2.  **Processing (Breathing):** Visual feedback.
-3.  **Connection (Double Reset):**
-    - Logic checks if `isConnected`.
-    - If true, it **disconnects first** to ensure a fresh session challenge.
-    - Then calls `connectAsync`.
-4.  **Chain Selection:** Post-connection, state transitions to `CONNECTED_CHAIN_SELECT`.
-5.  **Chain Switching:**
-    - New `reselectChain` function allows returning to Chain Select state *without* running `disconnectAsync`.
+### 4.2 连接状态机 (`useCheckoutState.ts`)
+`useCheckoutState` Hook 作为一个有限状态机 (FSM) 运行：
+1.  **Selection:** 用户选择钱包。
+2.  **Processing (Breathing):** 呼吸动画过渡。
+3.  **Connection (Double Reset - 双重重置):**
+    - 逻辑检查 `isConnected`。
+    - 若已连接，**先执行断开 (disconnect)**，确保触发全新的会话签名请求。
+    - 然后调用 `connectAsync`。
+4.  **Chain Selection:** 连接成功后，状态流转至 `CONNECTED_CHAIN_SELECT`。
+5.  **Chain Switching (换链):**
+    - 提供了 `reselectChain` 函数，允许在不运行 `disconnectAsync` 的情况下返回选链界面。
 
-### 4.3 "Switch Network" Implementation
-- Located in `ActionConsole` (Confirmation Phase).
-- Clicking "Switch Network" fires `reselectChain` -> State becomes `CONNECTED_CHAIN_SELECT`.
-- This preserves the `wagmi` wallet connection effectively, only changing the app's UI phase.
+### 4.3 "Switch Network" 实现细节
+- 位于 `ActionConsole` (确认阶段)。
+- 点击 "Switch Network" 触发 `reselectChain` -> 状态变为 `CONNECTED_CHAIN_SELECT`。
+- 此操作**不会**断开 Wagmi 连接，仅改变 UI 阶段，显著提升了用户体验。
 
 ---
 
-**Generated by Antigravity** | Last Updated: 2026-02-05
+**由 Antigravity 生成** | 最后更新: 2026-02-05

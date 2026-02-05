@@ -93,20 +93,44 @@ sequenceDiagram
     UI-->>User: 展示错误提示 + "Try Address Transfer" 选项
 
     %% ============================================================
-    %% 场景 4: 手动转账 (Address Transfer)
+    %% 场景 4: 手动转账 (Address Transfer) - 含差额处理
     %% ============================================================
-    Note over User, Chain: 场景 4: 手动地址转账 (Address Transfer)
+    Note over User, Chain: 场景 4: 手动地址转账与差额处理 (Address Transfer & Amount Logic)
 
-    User->>UI: 点击 "Address Transfer" 或从降级页进入
+    User->>UI: 点击 "Address Transfer"
     UI->>Hook: selectWallet('transfer')
     Hook-->>UI: 状态变更为 TRANSFER_FLOW
-    UI-->>User: 展示 AddressTransferPanel
-
+    
     User->>UI: 点击 "Generate Address"
-    UI->>Chain: (模拟) 请求充值地址
-    UI-->>User: 展示 QR Code 和 充值地址字符串
+    UI->>Chain: 请求充值地址 (API)
+    Chain-->>UI: 返回 Address & 锁定汇率
+    UI-->>User: 展示 QR Code, Address, 应付金额 ($20.00 / 20 USDT)
 
-    User->>UI: 点击 "I Have Transferred"
-    UI->>Hook: setTransferSuccess(true)
-    UI-->>User: 头部 Banner 更新为“支付成功”样式
+    User->>Chain: 用户通过交易所/冷钱包转账
+    
+    rect rgb(255, 240, 245)
+        Note right of Chain: 后端异步监听 (Backend Listener)
+        Chain->>Hook: WebSocket/Polling 推送入账事件
+        
+        alt 足额支付 (Exact Amount)
+            Hook-->>UI: 状态变更为 SUCCESS
+            UI-->>User: 展示“支付成功”
+        
+        else 少付 (Underpayment)
+            Hook-->>UI: 状态变更为 PARTIAL_PAYMENT
+            UI-->>User: 警告弹窗: "Received: 18 USDT, Remaining: 2 USDT"
+            User->>Chain: 补齐剩余金额
+            Chain->>Hook: 检测到补单 -> SUCCESS
+        
+        else 多付 (Overpayment)
+            Hook-->>UI: 状态变更为 OVER_PAYMENT
+            UI-->>User: 提示成功 "Paid 22 USDT. Excess 2 USDT will be credited."
+            Hook-->>UI: 延迟跳转 SUCCESS
+        end
+    end
+
+    User->>UI: 点击 "I Have Transferred" (手动触发查询)
+    UI->>Chain: 主动查询订单状态
+    Chain-->>UI: 返回当前入账金额
+    UI-->>User: 根据上述逻辑展示对应状态
 ```

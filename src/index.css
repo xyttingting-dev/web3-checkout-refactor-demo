@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 
+ * [架构说明] Global Reset 
+ * 强制重置基础容器，消除移动端默认边距，确保全屏体验
+ */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
 @layer utilities {
   .animate-blob {
     animation: blob 7s infinite;

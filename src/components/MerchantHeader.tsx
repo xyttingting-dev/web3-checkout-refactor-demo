@@ -62,7 +62,7 @@ export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) =
 
                             {/* Merchant Name */}
                             <span className="text-white text-sm md:text-base font-bold tracking-wide text-center whitespace-nowrap">
-                                {("BonusPay Global Merchant").length > 25 ? ("BonusPay Global Merchant").slice(0, 25) + "..." : "BonusPay Global Merchant"}
+                                {("Shopify Store").length > 25 ? ("Shopify Store").slice(0, 25) + "..." : "Shopify Store"}
                             </span>
 
                             {/* Right Separator */}

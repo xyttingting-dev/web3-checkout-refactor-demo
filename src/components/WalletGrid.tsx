@@ -1,36 +1,95 @@
-
 import { useState } from 'react';
 import type { WalletId, CheckoutState } from '../hooks/useCheckoutState';
-import { ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 import { useConnectors } from 'wagmi';
-
-
 import { getWalletIcon } from './IconLibrary';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WalletLibrary } from './WalletLibrary';
 
-
-// --- Wallet Inventory Definitions ---
-const ALL_WALLETS = [
-    { id: 'metamask', name: 'MetaMask' },
-    { id: 'walletconnect', name: 'WalletConnect' },
-    { id: 'binance', name: 'Binance Wallet' }, // Moved from Exchange
-    { id: 'okx', name: 'OKX Wallet' },
-    { id: 'bitget', name: 'Bitget Wallet' },
-    { id: 'trust', name: 'Trust Wallet' },
-    { id: 'coinbase', name: 'Coinbase Wallet' },
-    { id: 'imtoken', name: 'imToken' },
-
-    // Less priority
-    { id: 'tokenpocket', name: 'TokenPocket' },
-    { id: 'tronlink', name: 'TronLink' },
-    { id: 'phantom', name: 'Phantom' },
-    { id: 'coolwallet', name: 'CoolWallet' },
+// ─── Web3 wallets shown in the default 3×3 grid ──────────────────────────────
+// Binance here = Web3 connect mode (standard wagmi flow, same as MetaMask etc.)
+const WEB3_WALLETS = [
+    { id: 'metamask',      name: 'MetaMask'        },
+    { id: 'walletconnect', name: 'WalletConnect'   },
+    { id: 'binance',       name: 'Binance Wallet'  }, // Web3 connect — NOT BinancePay
+    { id: 'okx',           name: 'OKX Wallet'      },
+    { id: 'bitget',        name: 'Bitget Wallet'   },
+    { id: 'trust',         name: 'Trust Wallet'    },
+    { id: 'coinbase',      name: 'Coinbase Wallet' },
+    { id: 'imtoken',       name: 'imToken'         },
+    { id: 'phantom',       name: 'Phantom'         },
+    // extra wallets only visible after "Show more"
+    { id: 'tokenpocket',   name: 'TokenPocket'     },
+    { id: 'tronlink',      name: 'TronLink'        },
+    { id: 'coolwallet',    name: 'CoolWallet'      },
 ];
 
-// Special entry for Manual Transfer. Only shown at the end of expanded list.
-const TRANSFER_WALLET = { id: 'transfer', name: 'Transfer Pay' };
+// ─── Exchange / custodial partners — only visible after "Show more" ───────────
+// BinancePay is distinct from Binance Web3 Wallet above.
+// Clicking these triggers HYBRID_ACTION (QR code pay flow).
+const EXCHANGE_PARTNERS = [
+    { id: 'topwallet',   name: 'TopWallet'    },
+    { id: 'gate',        name: 'Gate Pay'     },
+    { id: 'kucoin',      name: 'KuCoin Pay'   },
+    { id: 'binance_pay', name: 'Binance Pay'  },
+];
+
+const INITIAL_COUNT = 9; // default 3×3
+
+// ─── Scoped hover styles (#005) ───────────────────────────────────────────────
+const HOVER_CSS = `
+.wc-card { -webkit-tap-highlight-color: transparent; outline: none; }
+.wc-card:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 20px rgba(99,102,241,0.13), 0 3px 8px rgba(0,0,0,0.06);
+  border-color: rgba(99,102,241,0.28);
+}
+.wc-card:active {
+  transform: translateY(-1px) scale(0.98);
+  transition-duration: 80ms;
+}
+.wc-card.wc-selected {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #6366f1, 0 6px 20px rgba(99,102,241,0.20);
+  border-color: transparent;
+  z-index: 10;
+}
+.wc-card:hover .wc-icon  { background: #eef2ff; }
+.wc-card:hover .wc-label { color: #4f46e5; }
+.wc-card.wc-selected .wc-label { color: #4338ca; font-weight: 600; }
+
+/* Exchange partner card — slightly different hover tint */
+.wc-exchange:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(243,186,47,0.18), 0 3px 8px rgba(0,0,0,0.06);
+  border-color: rgba(243,186,47,0.40);
+}
+.wc-exchange:active { transform: scale(0.98); transition-duration: 80ms; }
+.wc-exchange.wc-selected {
+  box-shadow: 0 0 0 2px white, 0 0 0 4px #F3BA2F, 0 6px 20px rgba(243,186,47,0.25);
+  border-color: transparent;
+}
+
+.wc-at:hover { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.24); }
+.wc-showmore:hover { background: #eef2ff; border-color: rgba(99,102,241,0.2); color: #4f46e5; }
+`;
+
+const CARD_STYLE: React.CSSProperties = {
+    display:        'flex',
+    flexDirection:  'column',
+    alignItems:     'center',
+    justifyContent: 'center',
+    background:     'white',
+    borderRadius:   14,
+    border:         '1px solid rgba(0,0,0,0.055)',
+    boxShadow:      '0 1px 4px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03)',
+    cursor:         'pointer',
+    transition: [
+        'transform    200ms cubic-bezier(0.34,1.56,0.64,1)',
+        'box-shadow   200ms cubic-bezier(0.34,1.56,0.64,1)',
+        'border-color 150ms ease',
+    ].join(', '),
+    userSelect: 'none',
+};
 
 interface WalletGridProps {
     onSelect: (id: WalletId) => void;
@@ -44,71 +103,28 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
         .filter(c => c.type === 'injected' && c.icon)
         .map(c => c.name.toLowerCase());
 
-
-    // Sort logic
-    const sortedWeb3Wallets = [...ALL_WALLETS].sort((a, b) => {
-        const aDetected = detectedNames.some(n => n.includes(a.name.toLowerCase().split(' ')[0].toLowerCase()));
-        const bDetected = detectedNames.some(n => n.includes(b.name.toLowerCase().split(' ')[0].toLowerCase()));
-
-        if (aDetected && !bDetected) return -1;
-        if (!aDetected && bDetected) return 1;
-
-        return 0;
+    // Detected/installed wallets float to top of web3 grid
+    const sortedWeb3 = [...WEB3_WALLETS].sort((a, b) => {
+        const aHit = detectedNames.some(n => n.includes(a.name.toLowerCase().split(' ')[0]));
+        const bHit = detectedNames.some(n => n.includes(b.name.toLowerCase().split(' ')[0]));
+        return aHit === bHit ? 0 : aHit ? -1 : 1;
     });
 
-    const [isExpanded, setIsExpanded] = useState(false);
+    const [isExpanded,    setIsExpanded]    = useState(false);
     const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-
-    const targetList: any[] = [...sortedWeb3Wallets];
-    if (isExpanded) {
-        targetList.push(TRANSFER_WALLET as any);
-    }
-    const initialDisplayCount = 9;
-
-    // Logic: 
-    // If not expanded: Show first 8.
-    // If expanded: Show ALL.
-    // + More Card: ALWAYS render as the last item if expanded, OR as the 8th item if not expanded?
-    // Requirement:
-    // "First Level: Popular 8" -> Show 0-7.
-    // "Second Level: Show more wallets" -> Expand all.
-    // "At the end of expanded list -> + More card".
-
-    // Actually the requirement says: 
-    // "第一级 (首页 Popular)： 展示精选的 8 个常用钱包。"
-    // "第二级 (展开列表)： 点击列表下方的 Show more wallets 后，在当前页面平滑展开全量钱包网格。"
-    // "关键点： 在展开后的网格最后一位，增加一个具备扩展感的 + More 规范入口卡片"
-
-    // So:
-    // 1. Initial view: 8 wallets.
-    // 2. Button "Show more wallets" below grid.
-    // 3. Expanded view: All listed wallets + "+ More" card at the very end.
-
-    const displayedWallets = isExpanded
-        ? targetList
-        : targetList.slice(0, initialDisplayCount);
-
 
     const isProcessing = checkoutState === 'PROCESSING';
 
-    // REMOVED: Search State for V2.0
-    // const [searchTerm, setSearchTerm] = useState('');
-    // const [showSamples, setShowSamples] = useState(false);
-
-    // Filter logic removed as search is gone
-    const finalDisplay = displayedWallets;
+    // Default view: first 9 web3 wallets
+    const visibleWeb3    = isExpanded ? sortedWeb3 : sortedWeb3.slice(0, INITIAL_COUNT);
+    const hasMoreWeb3    = sortedWeb3.length > INITIAL_COUNT;
 
     return (
         <div className="flex flex-col h-full min-h-[400px] relative">
+            <style>{HOVER_CSS}</style>
 
-
-            {/* Global Overlay for Processing State */}
+            {/* ── Processing overlay ── */}
             <AnimatePresence>
-                {/* Condition: PROCESSING state AND wallet is selected. 
-                    This covers both:
-                    1. Initial Wallet Selection (Simulated Processing)
-                    2. Web3 Connect Processing (triggered by selectPath) 
-                */}
                 {isProcessing && selectedWalletId && (
                     <motion.div
                         initial={{ opacity: 0 }}
@@ -116,154 +132,46 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                         exit={{ opacity: 0 }}
                         className="absolute inset-0 z-[60] flex items-center justify-center bg-white/60 backdrop-blur-xl rounded-2xl"
                     >
-                        {/* Centered Breathing Icon */}
                         <motion.div
                             key="loader"
                             layoutId={`wallet-icon-${selectedWalletId}`}
                             className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.5)] z-50 relative"
                             animate={{ scale: [1, 1.08, 1] }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                         >
-                            <div className="w-12 h-12">
-                                {getWalletIcon(selectedWalletId)}
-                            </div>
+                            <div className="w-12 h-12">{getWalletIcon(selectedWalletId)}</div>
                         </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Tabs - REMOVED for V2.0 */}
-            {/* 
-            <div className="flex bg-gray-100 p-1 rounded-xl mb-4 flex-shrink-0 relative z-0">
-                <button
-                    onClick={() => setActiveTab('web3')}
-                    className={clsx(
-                        "flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-300",
-                        activeTab === 'web3' ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                    )}
-                >
-                    Web3
-                </button>
-                <button
-                    onClick={() => setActiveTab('exchange')}
-                    className={clsx(
-                        "flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-300",
-                        activeTab === 'exchange' ? "bg-white text-gray-900 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                    )}
-                >
-                    Exchange
-                </button>
-            </div> 
-            */}
-
-
-            {/* Search Bar - Acts as Library Trigger */}
-            {/* REMOVED: Search Bar to clean up layout as per V2.0 instructions. */}
-            {/* 
-                <div className="relative mb-4 group flex-shrink-0 z-20">
-                     ... Search code ...
-                </div> 
-                */}
-
-            {/* Wallet Grid */}
-            <div className="grid grid-cols-3 gap-3 pb-4 px-1">
-                {finalDisplay.map((w) => {
+            {/* ── Web3 wallet grid (#003: gap responsive) ── */}
+            <div className="grid grid-cols-3 gap-2 md:gap-2.5 pb-2 px-2 md:px-3">
+                {visibleWeb3.map((w) => {
                     const isSelected = selectedWalletId === w.id;
-                    const isTransfer = w.id === 'transfer';
-
-                    if (isTransfer) {
-                        return (
-                            <button
-                                key={w.id}
-                                onClick={() => onSelect(w.id as WalletId)}
-                                className={clsx(
-                                    "col-span-3 relative flex flex-col items-center justify-between p-3 rounded-xl transition-all duration-300 min-h-[100px]",
-                                    "bg-white border border-gray-100",
-                                    !isSelected && "hover:shadow-lg hover:-translate-y-1 hover:border-blue-200",
-                                    isSelected ? "ring-2 ring-blue-500 ring-offset-2 z-30" : "z-0"
-                                )}
-                            >
-                                {/* Content Wrapper to match centering of others but with specific layout */}
-                                <div className="flex flex-col items-center w-full h-full gap-2">
-
-                                    {/* Custom 'Icon' Area - simulating other wallets having a big icon, here we show chain row + chevron? 
-                                        Or stick to requested: "Address Transfer" text style matches "MetaMask".
-                                        Common wallets have: Icon (Top), Text (Bottom).
-                                        Address Transfer: 
-                                        User said: "Card right side ... simple vector > icon".
-                                        "Bottom bar ... 5 chain icons".
-                                        Let's try to mimic the structure: 
-                                        Top Area: Chain Icons Row (as the 'visual'?) OR Title?
-                                        User said: "Title style must match MetaMask".
-                                        Let's put Title at Bottom like others?
-                                        And Chains at Top? 
-                                        Or Title Top, Chains Bottom?
-                                        The user prompt implies a Layout similar to 'standard tab'.
-                                        Standard tab is: Icon (Center), Name (Bottom).
-                                        If I put Chains at bottom, it might conflict with Name position.
-                                        Let's try:
-                                            Top: Row of Chain Icons (acting as the main visual)
-                                            Bottom: "Address Transfer" Name
-                                            Right absolute: Chevron?
-                                        Actually, User said: "Text style must match... MetaMask".
-                                        "Bottom bar: 5 chain icons".
-                                        So:
-                                        Name (Middle/Top?)
-                                        Chain Icons (Bottom)
-                                        Chevron (Right side)
-                                    */}
-
-                                    {/* Let's try to keep it clean. */}
-                                    <div className="flex-1 flex flex-col items-center justify-center w-full relative gap-1">
-
-                                        {/* Top: Chain Icons + More Label */}
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            {/* 4 Logos First */}
-                                            <div className="w-5 h-5 rounded-full bg-gray-100 border border-white shadow-sm"></div>
-                                            <div className="w-5 h-5 rounded-full bg-gray-100 border border-white shadow-sm"></div>
-                                            <div className="w-5 h-5 rounded-full bg-gray-100 border border-white shadow-sm"></div>
-                                            <div className="w-5 h-5 rounded-full bg-gray-100 border border-white shadow-sm"></div>
-
-                                            {/* 'More' Label Last */}
-                                            <span className="text-[10px] text-gray-400 font-medium leading-none">More</span>
-                                        </div>
-
-                                    </div>
-
-                                    <span className={clsx(
-                                        "font-normal text-xs text-center leading-tight px-1 transition-colors",
-                                        isSelected ? "text-blue-600" : "text-gray-800"
-                                    )}>
-                                        Address Transfer
-                                    </span>
-                                </div>
-                            </button>
-                        )
-                    }
-
                     return (
                         <button
                             key={w.id}
                             onClick={() => onSelect(w.id as WalletId)}
-                            className={clsx(
-                                "group relative flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-300 min-h-[100px]",
-                                "bg-white border border-gray-100",
-                                !isSelected && "hover:shadow-lg hover:-translate-y-1 hover:border-blue-200",
-                                isSelected ? "ring-2 ring-blue-500 ring-offset-2 z-30" : "z-0"
-                            )}
+                            className={clsx('wc-card', isSelected && 'wc-selected')}
+                            style={{ ...CARD_STYLE, padding: '10px 6px 8px', minHeight: 96 }}
                         >
-
                             <motion.div
                                 layoutId={isProcessing && isSelected ? `wallet-icon-${w.id}` : undefined}
-                                className="w-10 h-10 rounded-xl mb-2 flex items-center justify-center bg-white transition-all duration-300"
+                                className="wc-icon"
+                                style={{
+                                    width: 40, height: 40, borderRadius: 10,
+                                    background: 'white', marginBottom: 8,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'background 200ms ease',
+                                }}
                             >
                                 {getWalletIcon(w.id)}
                             </motion.div>
-
-                            <span className={clsx(
-                                "font-normal text-xs text-center leading-tight px-1 transition-colors",
-                                isSelected ? "text-blue-600" : "text-gray-800"
-                            )}>
+                            <span
+                                className="wc-label"
+                                style={{ fontSize: 11, fontWeight: 500, color: '#374151', textAlign: 'center', lineHeight: 1.3, padding: '0 3px', transition: 'color 150ms ease' }}
+                            >
                                 {w.name}
                             </span>
                         </button>
@@ -271,38 +179,166 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                 })}
             </div>
 
-
-            {/* Empty State / Cloud Search Trigger - REMOVED for V2.0 */}
-            {/* 
-            {searchTerm && finalDisplay.length === 0 && (
-                ...
-            )} 
-            */}
-
-            {/* Show More Button (Only if NOT expanded) */}
-            {!isExpanded && (
-                <div className="flex justify-center mt-0 pb-4">
+            {/* ── Show more button (only when not expanded and list > 9) ── */}
+            {(hasMoreWeb3 || !isExpanded) && !isExpanded && (
+                <div className="px-2 md:px-3 pb-2">
                     <button
                         onClick={() => setIsExpanded(true)}
-                        className="w-full py-3 bg-gray-50 hover:bg-gray-100 rounded-xl text-xs font-bold text-gray-500 transition-colors flex items-center justify-center gap-1"
+                        className="wc-showmore"
+                        style={{
+                            width: '100%', padding: '10px',
+                            background: '#f4f4f7',
+                            border: '1px solid rgba(0,0,0,0.055)',
+                            borderRadius: 11,
+                            fontSize: 12, fontWeight: 600, color: '#6b7280',
+                            cursor: 'pointer',
+                            transition: 'background 150ms, border-color 150ms, color 150ms',
+                        }}
                     >
                         Show more wallets
-                        <ChevronDown size={14} />
                     </button>
                 </div>
             )}
 
-            {/* Library Overlay */}
+            {/* ── EXPANDED: Exchange partner section + remaining web3 + Address Transfer ── */}
+            {isExpanded && (
+                <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                    className="px-2 md:px-3 pb-3 flex flex-col gap-4"
+                >
+                    {/* ── Section divider ── */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '2px 0 0' }}>
+                        <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.07)' }}/>
+                        {[0.15, 0.10, 0.07].map((o, i) => (
+                            <div key={i} style={{ width: 3, height: 3, borderRadius: '50%', background: `rgba(0,0,0,${o})` }}/>
+                        ))}
+                        <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.07)' }}/>
+                    </div>
+
+                    {/* ── Exchange / custodial partner block ── */}
+                    <div>
+                        {/* Section label */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 6,
+                            marginBottom: 10,
+                        }}>
+                            <span style={{ fontSize: 10, fontWeight: 700, color: '#9ca3af', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                                Exchange Partners
+                            </span>
+                            <div style={{ flex: 1, height: 1, background: 'rgba(0,0,0,0.06)' }}/>
+                        </div>
+
+                        {/* 2×2 partner grid */}
+                        <div className="grid grid-cols-2 gap-2 md:gap-2.5">
+                            {EXCHANGE_PARTNERS.map((p) => {
+                                const isSelected = selectedWalletId === p.id;
+                                // BinancePay is disabled until enabled from backend (示例展示)
+                                const isDisabled = false; // set true for specific IDs if needed
+                                return (
+                                    <button
+                                        key={p.id}
+                                        onClick={() => !isDisabled && onSelect(p.id as WalletId)}
+                                        className={clsx('wc-exchange', isSelected && 'wc-selected')}
+                                        disabled={isDisabled}
+                                        style={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: 8,
+                                            padding: '14px 10px 12px',
+                                            minHeight: 88,
+                                            background: isDisabled ? '#fafafa' : 'white',
+                                            borderRadius: 14,
+                                            border: `1px solid ${isDisabled ? 'rgba(0,0,0,0.04)' : 'rgba(0,0,0,0.055)'}`,
+                                            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                                            cursor: isDisabled ? 'not-allowed' : 'pointer',
+                                            opacity: isDisabled ? 0.55 : 1,
+                                            transition: 'transform 200ms cubic-bezier(0.34,1.56,0.64,1), box-shadow 200ms ease, border-color 150ms ease',
+                                            userSelect: 'none',
+                                            position: 'relative',
+                                            overflow: 'hidden',
+                                        }}
+                                    >
+                                        {/* Icon */}
+                                        <div style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            {getWalletIcon(p.id)}
+                                        </div>
+                                        {/* Name */}
+                                        <span style={{
+                                            fontSize: 11, fontWeight: 600,
+                                            color: isSelected ? '#b45309' : '#374151',
+                                            textAlign: 'center', lineHeight: 1.3,
+                                        }}>
+                                            {p.name}
+                                        </span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    {/* ── Address Transfer fallback ── */}
+                    <div>
+                        <button
+                            onClick={() => onSelect('transfer' as WalletId)}
+                            className="wc-at"
+                            style={{
+                                width: '100%',
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                padding: '9px 12px 9px 14px',
+                                borderRadius: 10,
+                                background: 'rgba(99,102,241,0.04)',
+                                border: '1px solid rgba(99,102,241,0.14)',
+                                cursor: 'pointer',
+                                transition: 'background 150ms, border-color 150ms',
+                                position: 'relative',
+                            }}
+                        >
+                            {/* Left accent bar */}
+                            <div style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', width: 3, height: '55%', borderRadius: '0 2px 2px 0', background: 'rgba(99,102,241,0.35)' }}/>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(99,102,241,0.55)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                                </svg>
+                                <span style={{ fontSize: 11, fontWeight: 600, color: '#4b5563' }}>Address Transfer</span>
+                                <span style={{ fontSize: 9, color: '#c4c4cc' }}>· manual</span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                {[
+                                    { bg: '#ef4444', label: '₮' },
+                                    { bg: '#3b82f6', label: 'Ξ' },
+                                    { bg: '#f59e0b', label: 'B' },
+                                    { bg: '#10b981', label: 'P' },
+                                ].map((c, i) => (
+                                    <div key={i} style={{
+                                        width: 17, height: 17, borderRadius: '50%',
+                                        background: c.bg, border: '1.5px solid white',
+                                        fontSize: 8, fontWeight: 700, color: 'white',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        marginLeft: i > 0 ? -5 : 0,
+                                    }}>
+                                        {c.label}
+                                    </div>
+                                ))}
+                            </div>
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* ── WalletLibrary overlay ── */}
             <WalletLibrary
                 isOpen={isLibraryOpen}
                 onClose={() => setIsLibraryOpen(false)}
-                onSelect={(id) => {
-                    setIsLibraryOpen(false);
-                    onSelect(id);
-                }}
-                wallets={ALL_WALLETS}
-                initialSearchTerm={''}
+                onSelect={(id) => { setIsLibraryOpen(false); onSelect(id); }}
+                wallets={WEB3_WALLETS}
+                initialSearchTerm=""
             />
         </div>
-    )
-}
+    );
+};

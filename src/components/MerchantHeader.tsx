@@ -1,7 +1,21 @@
-
 import { useState } from 'react';
 import { Check, Copy, ChevronDown, ChevronUp } from 'lucide-react';
-import { MerchantLogo } from './assets/MerchantLogo';
+import { MerchantLogo } from './MerchantLogo';
+
+/**
+ * MerchantHeader
+ *
+ * Changes vs original (audit IDs):
+ *   #023 — Banner gradient: deep purple→violet→magenta→orange→gold + blue radial glow (bottom-left) + orange radial glow (bottom-right)
+ *   #015 — Inner ring: inset box-shadow top white/25 + bottom black/15 + top 1px glass line
+ *   #016 — Details toggle: upgraded to stateful glass capsule with violet active state
+ *   #028 — Details kv layout: fixed-width label + dot leader + mono value, proper eye-tracking alignment
+ *   Logo  — Replaced hardcoded Shopify SVG with MerchantLogo component (supports logoUrl / brandColor / merchantName props)
+ *
+ * Responsive behaviour:
+ *   Mobile  : Banner h-44 (176px), full-bleed no top rounding (!rounded-none)
+ *   Desktop : Banner h-48 (192px), rounded-t-2xl top corners, card shadow from MobileShell
+ */
 
 interface MerchantHeaderProps {
     isSuccess?: boolean;
@@ -12,9 +26,8 @@ export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) =
     const [copied, setCopied] = useState<string | null>(null);
     const [showDetails, setShowDetails] = useState(false);
 
-    // Business Data
-    const fullMerchantOrder = "B50892189DE04";
-    const fullTxId = "131769414929481";
+    const fullMerchantOrder = 'B50892189DE04';
+    const fullTxId = '131769414929481';
 
     const handleCopy = (text: string, type: string) => {
         navigator.clipboard.writeText(text);
@@ -27,94 +40,211 @@ export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) =
     return (
         <div className={`w-full bg-white relative ${hideAmount ? 'mb-1' : 'mb-5'} !rounded-none md:rounded-t-2xl transition-all`}>
 
-            {/* Banner Section */}
-            <div className="relative h-44 w-full overflow-hidden !rounded-none md:!rounded-t-2xl bg-gradient-to-r from-violet-600 via-fuchsia-500 to-pink-500 flex flex-col items-center pt-8 pb-4 gap-2">
+            {/* ─── Banner ─────────────────────────────────────────────── */}
+            <div
+                className="relative h-44 md:h-48 w-full overflow-hidden !rounded-none md:!rounded-t-2xl flex flex-col items-center pt-7 md:pt-8 pb-4 gap-4"
+                style={{
+                    background: 'linear-gradient(135deg, #1a0533 0%, #3b1278 20%, #7c3aed 42%, #db2777 65%, #f97316 85%, #fbbf24 100%)',
+                }}
+            >
+                {/* Inner ring — #015 */}
+                <div
+                    className="absolute inset-0 !rounded-none md:!rounded-t-2xl pointer-events-none"
+                    style={{
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)',
+                    }}
+                />
 
-                {/* Background Textures */}
-                <div className="absolute -top-10 left-10 h-64 w-64 bg-white/20 blur-3xl rotate-45 mix-blend-overlay"></div>
-                <div className="absolute top-0 right-0 w-full h-full bg-gradient-to-bl from-white/10 via-transparent to-transparent"></div>
-                <div className="absolute top-0 left-0 w-full h-1 bg-white/30"></div>
+                {/* Blue radial glow — bottom-left — #023 */}
+                <div
+                    className="absolute -bottom-10 -left-10 w-64 h-64 rounded-full pointer-events-none"
+                    style={{
+                        background: 'radial-gradient(circle, rgba(59,130,246,0.55) 0%, transparent 70%)',
+                        filter: 'blur(28px)',
+                    }}
+                />
 
-                {/* 'Pay' Watermark */}
-                <div className="absolute -bottom-8 -right-8 opacity-[0.05] pointer-events-none select-none animate-float z-0 transform rotate-12">
-                    <span className="text-[160px] font-black text-white italic tracking-tighter leading-none">
-                        Pay
-                    </span>
+                {/* Orange radial glow — bottom-right — #023 */}
+                <div
+                    className="absolute -bottom-8 -right-8 w-56 h-56 rounded-full pointer-events-none"
+                    style={{
+                        background: 'radial-gradient(circle, rgba(249,115,22,0.5) 0%, transparent 70%)',
+                        filter: 'blur(24px)',
+                    }}
+                />
+
+                {/* Rim light — top-right */}
+                <div
+                    className="absolute top-0 right-0 w-48 h-48 pointer-events-none"
+                    style={{
+                        background: 'radial-gradient(ellipse at 100% 0%, rgba(255,255,255,0.12) 0%, transparent 60%)',
+                    }}
+                />
+
+                {/* Top 1px glass line */}
+                <div
+                    className="absolute top-0 left-0 w-full h-px pointer-events-none"
+                    style={{
+                        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 30%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.4) 70%, transparent 100%)',
+                    }}
+                />
+
+                {/* Pay watermark */}
+                <div className="absolute -bottom-6 -right-6 opacity-[0.06] pointer-events-none select-none animate-float z-0 rotate-12">
+                    <span className="text-[120px] md:text-[140px] font-black text-white italic tracking-tighter leading-none">Pay</span>
                 </div>
 
-                {/* Brand Content */}
-                <div className="relative z-20 flex flex-col items-center gap-2">
-                    <MerchantLogo />
-
-                    {/* Brand Name Capsule */}
-                    <div className="bg-white/10 backdrop-blur-md border border-white/10 px-6 py-2 rounded-lg shadow-xl relative overflow-hidden flex items-center justify-center min-h-[44px]">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent opacity-30"></div>
-                        <div className="relative z-10 flex items-center gap-3">
-                            <div className="w-px h-6 bg-white/50"></div>
-                            <span className="text-white text-sm md:text-base font-bold tracking-wide text-center whitespace-nowrap">
-                                Shopify Store
-                            </span>
-                            <div className="w-px h-6 bg-white/50"></div>
-                        </div>
+                {/* ── Logo tile ── */}
+                <div
+                    className="relative z-20 flex-shrink-0"
+                    style={{
+                        width: 56,
+                        height: 56,
+                        borderRadius: 16,
+                        background: 'rgba(255,255,255,0.14)',
+                        backdropFilter: 'blur(16px)',
+                        WebkitBackdropFilter: 'blur(16px)',
+                        border: '1.5px solid rgba(255,255,255,0.30)',
+                        boxShadow: '0 12px 32px rgba(0,0,0,0.30), inset 0 1.5px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.10)',
+                    }}
+                >
+                    {/* Inner shimmer overlay */}
+                    <div
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                            borderRadius: 16,
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.22) 0%, transparent 55%)',
+                        }}
+                    />
+                    {/* MerchantLogo — pass merchant data from your order context */}
+                    <div className="relative z-10 w-full h-full p-1.5">
+                        <MerchantLogo
+                            /* logoUrl="https://cdn.yourmerchant.com/logo.png" */
+                            merchantName="Shopify Store"
+                            brandColor="#96bf48"
+                        />
                     </div>
+                </div>
+
+                {/* ── Brand name — typographic only, no background box ── */}
+                <div className="relative z-20 flex items-center gap-3">
+                    <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.35)' }} />
+                    <span
+                        style={{
+                            color: 'rgba(255,255,255,0.90)',
+                            fontSize: 11,
+                            fontWeight: 500,
+                            letterSpacing: '0.14em',
+                            textTransform: 'uppercase' as const,
+                            fontFamily: 'Georgia, "Times New Roman", serif',
+                            whiteSpace: 'nowrap',
+                            textShadow: '0 1px 8px rgba(0,0,0,0.25)',
+                        }}
+                    >
+                        Shopify Store
+                    </span>
+                    <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.35)' }} />
                 </div>
             </div>
 
-            {/* Amount Display */}
+            {/* ─── Amount Display — #002 breathing room ──────────────── */}
             {!hideAmount && (
-                <div className="pt-4 px-5 flex flex-col items-center justify-center min-h-[60px] relative mt-0 text-center">
-                    <div className="flex items-baseline gap-2 mb-2">
-                        <span className="text-[32px] font-bold text-gray-900 tracking-tight leading-none tracking-tight">20.00</span>
-                        <span className="text-sm font-semibold text-gray-500">USDT</span>
+                <div className="pt-5 px-5 pb-1 flex flex-col items-center justify-center relative text-center">
+                    <div className="flex items-baseline gap-2 mb-1.5">
+                        <span className="text-[30px] md:text-[34px] font-bold text-gray-900 tracking-tight leading-none">
+                            20.00
+                        </span>
+                        <span className="text-xs md:text-sm font-semibold text-gray-400">USDT</span>
                     </div>
 
-                    <div className="text-xs text-gray-400 font-medium mb-2">≈ $20.00 USD</div>
+                    <div className="text-xs text-gray-400 font-medium mb-3">≈ $20.00 USD</div>
 
+                    {/* Details toggle — #016 stateful glass capsule */}
                     <button
                         onClick={() => setShowDetails(!showDetails)}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-gray-100/80 hover:bg-gray-200/80 text-gray-500 rounded-full transition-all active:scale-95 group"
+                        className="flex items-center gap-1.5 transition-all active:scale-95 group"
+                        style={{
+                            padding: '6px 14px',
+                            borderRadius: '999px',
+                            background: showDetails
+                                ? 'linear-gradient(135deg, rgba(124,58,237,0.10), rgba(219,39,119,0.08))'
+                                : 'rgba(243,244,246,0.9)',
+                            border: showDetails
+                                ? '1px solid rgba(124,58,237,0.20)'
+                                : '1px solid rgba(0,0,0,0.06)',
+                            boxShadow: showDetails
+                                ? '0 2px 8px rgba(124,58,237,0.12), inset 0 1px 0 rgba(255,255,255,0.5)'
+                                : '0 1px 3px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8)',
+                        }}
                     >
-                        <span className="text-sm font-semibold group-hover:text-gray-700">Details</span>
-                        {showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                        <span
+                            className="text-xs font-semibold transition-colors"
+                            style={{ color: showDetails ? '#7c3aed' : '#6b7280' }}
+                        >
+                            Details
+                        </span>
+                        {showDetails
+                            ? <ChevronUp size={14} style={{ color: '#8b5cf6' }} />
+                            : <ChevronDown size={14} className="text-gray-400 group-hover:text-gray-600" />
+                        }
                     </button>
                 </div>
             )}
 
-            {/* Collapsible Details */}
+            {/* ─── Collapsible Details — #028 dot-leader kv layout ───── */}
             {!hideAmount && (
-                <div className={`overflow-hidden transition-all duration-300 ease-in-out ${showDetails ? 'max-h-24 opacity-100 mt-2' : 'max-h-0 opacity-0'}`}>
-                    <div className="px-5 pb-2 pt-0 space-y-3">
-                        <div className="flex justify-between items-center group">
-                            <span className="text-xs text-gray-400 font-medium min-w-[30%] text-left">Merchant Order</span>
-                            <div className="text-right flex items-center justify-end gap-1.5 flex-1 min-w-0">
-                                <span className="text-sm font-semibold text-gray-900 break-all leading-tight text-right">
+                <div
+                    className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                        showDetails ? 'max-h-28 opacity-100 mt-2' : 'max-h-0 opacity-0'
+                    }`}
+                >
+                    <div className="px-5 pb-4 pt-1 space-y-2.5">
+
+                        {/* Merchant Order */}
+                        <div className="flex items-center">
+                            <span className="text-xs text-gray-400 font-medium w-32 flex-shrink-0">
+                                Merchant Order
+                            </span>
+                            {/* Dot leader */}
+                            <span className="flex-1 border-b border-dotted border-gray-200 mx-2 mb-px" />
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-semibold text-gray-800 font-mono">
                                     {fullMerchantOrder}
                                 </span>
                                 <button
                                     onClick={() => handleCopy(fullMerchantOrder, 'Order ID')}
                                     className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-indigo-600 flex-shrink-0"
-                                    title="Copy Order ID"
                                 >
-                                    {copied === 'Order ID' ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                                    {copied === 'Order ID'
+                                        ? <Check size={12} className="text-green-500" />
+                                        : <Copy size={12} />
+                                    }
                                 </button>
                             </div>
                         </div>
 
-                        <div className="flex justify-between items-center group">
-                            <span className="text-xs text-gray-400 font-medium min-w-[30%] text-left">Transaction ID</span>
-                            <div className="text-right flex items-center justify-end gap-1.5 flex-1 min-w-0">
-                                <span className="text-sm font-semibold text-gray-900 break-all leading-tight text-right">
+                        {/* Transaction ID */}
+                        <div className="flex items-center">
+                            <span className="text-xs text-gray-400 font-medium w-32 flex-shrink-0">
+                                Transaction ID
+                            </span>
+                            <span className="flex-1 border-b border-dotted border-gray-200 mx-2 mb-px" />
+                            <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-semibold text-gray-800 font-mono">
                                     {fullTxId}
                                 </span>
                                 <button
                                     onClick={() => handleCopy(fullTxId, 'Tx ID')}
                                     className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-400 hover:text-indigo-600 flex-shrink-0"
-                                    title="Copy Transaction ID"
                                 >
-                                    {copied === 'Tx ID' ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+                                    {copied === 'Tx ID'
+                                        ? <Check size={12} className="text-green-500" />
+                                        : <Copy size={12} />
+                                    }
                                 </button>
                             </div>
                         </div>
+
                     </div>
                 </div>
             )}

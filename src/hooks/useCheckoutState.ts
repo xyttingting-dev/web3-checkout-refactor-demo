@@ -7,7 +7,11 @@ export type CheckoutState = 'SELECTION' | 'FOCUS' | 'PROCESSING' | 'HYBRID_ACTIO
 
 export type WalletId =
     | 'metamask' | 'bitget' | 'okx' | 'coinbase' | 'particle' | 'walletconnect' | 'imtoken' | 'coolwallet' | 'tronlink'
-    | 'binance' | 'binance_web3' | 'kucoin' | 'gate' | 'phantom' | 'trust' | 'rainbow' | 'rabbithole' | 'injected' | 'tokenpocket' | 'transfer';
+    | 'binance' | 'binance_web3' | 'binance_pay' | 'kucoin' | 'gate' | 'topwallet'
+    | 'phantom' | 'trust' | 'rainbow' | 'rabbithole' | 'injected' | 'tokenpocket' | 'transfer';
+
+// Exchange/custodial wallets that show a QR code pay flow instead of Web3 connect
+export const EXCHANGE_WALLET_IDS: WalletId[] = ['binance_pay', 'kucoin', 'gate', 'topwallet'];
 
 export interface CheckoutContext {
     state: CheckoutState;
@@ -38,9 +42,7 @@ export const useCheckoutState = (): CheckoutContext => {
     // 1. Connection Listener (State Guard)
     // ---------------------------------------------------------
     useEffect(() => {
-        // Only trigger if we are actively trying to connect/process
         if (state === 'PROCESSING' && isConnected) {
-            // [Audit] Connection detected during processing -> Move to Chain Select
             setState('CONNECTED_CHAIN_SELECT');
         }
     }, [isConnected, state]);
@@ -49,7 +51,6 @@ export const useCheckoutState = (): CheckoutContext => {
     // 2. Wallet Selection (Trigger)
     // ---------------------------------------------------------
     const selectWallet = useCallback((id: WalletId) => {
-        // [Audit] User selected wallet: {id}
         setSelectedWallet(id);
 
         if (id === 'transfer') {
@@ -59,109 +60,71 @@ export const useCheckoutState = (): CheckoutContext => {
 
         setState('FOCUS');
 
-        // Simulate Centralized/Exchange vs Web3 logic
         setTimeout(() => {
-            if (['binance', 'binance_web3'].includes(id)) {
-                // [Audit] Branch: Hybrid Action (Binance)
+            // Exchange / custodial wallets → QR code pay flow (HYBRID_ACTION)
+            // binance (Web3 connect) stays in DEBUG_INTERCEPT like other Web3 wallets
+            if (EXCHANGE_WALLET_IDS.includes(id)) {
                 setState('HYBRID_ACTION');
             } else {
-                // [Audit] Branch: Standard Web3 -> Intercept/Connect
                 setState('DEBUG_INTERCEPT');
             }
         }, 600);
     }, []);
 
     // ---------------------------------------------------------
-    // 3. Path Selection & Connection Logic (The Core)
+    // 3. Path Selection & Connection Logic
     // ---------------------------------------------------------
     const selectPath = useCallback(async (path: 'success' | 'fail') => {
-        // [Audit] Simulation Path Selected: {path}
-        setState('PROCESSING'); // Start "Breathing" Animation
+        setState('PROCESSING');
 
         if (path === 'success') {
-            // Delay 1s for animation to be seen
             setTimeout(async () => {
                 try {
-                    // Logic Resurrection: "Double Reset"
-                    // Check if already connected (via status or isConnected hook)
                     if (isConnected || connectStatus === 'success') {
-                        // [Audit] Pre-flight: Disconnecting existing session to ensure clean state
                         await disconnectAsync();
                     }
-
-                    // Find Connector - Be very specific for "Metamask"
                     const connector = connectors.find(c => c.name.toLowerCase().includes('metamask')) || connectors[0];
-                    if (!connector) {
-                        throw new Error("No connector found");
-                    }
-
-                    // [Audit] Invoking Web3 Connect
+                    if (!connector) throw new Error('No connector found');
                     await connectAsync({ connector });
-
-                    // Note: The useEffect above will catch 'isConnected' -> true and transition state.
                 } catch (error) {
                     console.error('[System] Connection Failed:', error);
                     setState('FALLBACK');
                 }
             }, 1000);
         } else {
-            // Simulated Fail Path
-            setTimeout(() => {
-                setState('FALLBACK');
-            }, 1000);
+            setTimeout(() => setState('FALLBACK'), 1000);
         }
     }, [connectAsync, connectors, disconnectAsync, isConnected, connectStatus]);
 
     // ---------------------------------------------------------
-    // 4. Step Transitions with State Comments
+    // 4. Step Transitions
     // ---------------------------------------------------------
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const selectChain = useCallback((_chainId: string) => {
-        // [Audit] Chain Selected -> Logic: Move to Confirmation Phase
         setState('CONFIRMATION_PHASE');
     }, []);
 
     const submitOrder = useCallback(() => {
-        // [Audit] Order Submitted -> Logic: Trigger final success validation
-        // Phase 5: Force Success Rule - Wait 1s then Success
         setState('PROCESSING');
-        setTimeout(() => {
-            setState('SUCCESS');
-        }, 1000);
+        setTimeout(() => setState('SUCCESS'), 1000);
     }, []);
 
-    const approveAuth = useCallback(() => {
-        setState('SIGN_REQUEST');
-    }, []);
-
-    const confirmSign = useCallback(() => {
-        setState('SUCCESS');
-    }, []);
-
-    const startDappPay = useCallback(() => {
-        setState('DAPP_PAY');
-    }, []);
+    const approveAuth    = useCallback(() => setState('SIGN_REQUEST'), []);
+    const confirmSign    = useCallback(() => setState('SUCCESS'), []);
+    const startDappPay   = useCallback(() => setState('DAPP_PAY'), []);
 
     const confirmHybridAction = useCallback(() => {
         setState('PROCESSING');
-        setTimeout(() => {
-            setState('SUCCESS');
-        }, 1500);
+        setTimeout(() => setState('SUCCESS'), 1500);
     }, []);
 
     const debugAction = useCallback((action: 'success' | 'fail' | 'retry') => {
         if (action === 'success') setState('SUCCESS');
-        if (action === 'fail') setState('FALLBACK');
-        if (action === 'retry') {
-            setState('SELECTION');
-            setSelectedWallet(null);
-        }
+        if (action === 'fail')    setState('FALLBACK');
+        if (action === 'retry')   { setState('SELECTION'); setSelectedWallet(null); }
     }, []);
 
-    const reselectChain = useCallback(() => {
-        // [Audit] User requested reselect -> Maintain connection, return to chain list
-        setState('CONNECTED_CHAIN_SELECT');
-    }, []);
+    const reselectChain = useCallback(() => setState('CONNECTED_CHAIN_SELECT'), []);
 
     const reset = useCallback(() => {
         setState('SELECTION');
@@ -169,18 +132,9 @@ export const useCheckoutState = (): CheckoutContext => {
     }, []);
 
     return {
-        state,
-        selectedWallet,
-        selectWallet,
-        confirmHybridAction,
-        selectChain,
-        approveAuth,
-        confirmSign,
-        startDappPay,
-        reset,
-        selectPath,
-        debugAction,
-        submitOrder,
-        reselectChain
+        state, selectedWallet,
+        selectWallet, confirmHybridAction, selectChain, approveAuth,
+        confirmSign, startDappPay, reset, selectPath, debugAction,
+        submitOrder, reselectChain,
     };
 };

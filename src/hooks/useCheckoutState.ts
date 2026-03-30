@@ -3,7 +3,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { useConnect, useDisconnect, useAccount } from 'wagmi';
 
 export type CheckoutState = 'SELECTION' | 'FOCUS' | 'PROCESSING' | 'HYBRID_ACTION' | 'FALLBACK' |
-    'CONNECTED_CHAIN_SELECT' | 'CONFIRMATION_PHASE' | 'AUTH_REQUEST' | 'SIGN_REQUEST' | 'SUCCESS' | 'FAIL' | 'DAPP_PAY' | 'DEBUG_INTERCEPT' | 'TRANSFER_FLOW';
+    'CONNECTED_CHAIN_SELECT' | 'CONFIRMATION_PHASE' | 'AUTH_REQUEST' | 'SIGN_REQUEST' | 'SUCCESS' | 'FAIL' |
+    'DAPP_PAY' | 'DEBUG_INTERCEPT' | 'TRANSFER_FLOW' |
+    'DAPP_CONNECTING' | 'DAPP_CONNECTED' | 'DAPP_FAILED';
 
 export type WalletId =
     | 'metamask' | 'bitget' | 'okx' | 'coinbase' | 'particle' | 'walletconnect' | 'imtoken' | 'coolwallet' | 'tronlink'
@@ -13,9 +15,38 @@ export type WalletId =
 // Exchange/custodial wallets that show a QR code pay flow instead of Web3 connect
 export const EXCHANGE_WALLET_IDS: WalletId[] = ['binance_pay', 'kucoin', 'gate', 'topwallet'];
 
+// ─── #029 Deep-link helpers ───────────────────────────────────────────────────
+const WALLET_DEEP_LINKS: Partial<Record<WalletId, string>> = {
+    metamask:    'metamask://',
+    trust:       'trust://',
+    coinbase:    'cbwallet://',
+    rainbow:     'rainbow://',
+    tokenpocket: 'tpoutside://',
+    imtoken:     'imtokenv2://',
+};
+
+function isMobileBrowser(): boolean {
+    return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+type EthProvider = { isMetaMask?: boolean; isTrust?: boolean; isCoinbaseWallet?: boolean };
+
+function detectDappBrowser(): boolean {
+    return typeof window !== 'undefined' &&
+        typeof (window as Window & { ethereum?: unknown }).ethereum !== 'undefined';
+}
+
+function tryDeepLink(id: WalletId): void {
+    if (!isMobileBrowser()) return;
+    const scheme = WALLET_DEEP_LINKS[id];
+    if (scheme) window.location.href = scheme;
+}
+
 export interface CheckoutContext {
     state: CheckoutState;
     selectedWallet: WalletId | null;
+    isDappBrowser: boolean;
+    dappWalletName: string;
     selectWallet: (id: WalletId) => void;
     confirmHybridAction: (type: 'custodial' | 'web3') => void;
     selectChain: (chainId: string) => void;
@@ -27,11 +58,15 @@ export interface CheckoutContext {
     debugAction: (action: 'success' | 'fail' | 'retry') => void;
     submitOrder: () => void;
     reselectChain: () => void;
+    retryDappConnect: () => void;
+    disconnectDapp: () => void;
 }
 
 export const useCheckoutState = (): CheckoutContext => {
     const [state, setState] = useState<CheckoutState>('SELECTION');
     const [selectedWallet, setSelectedWallet] = useState<WalletId | null>(null);
+    const [isDappBrowser, setIsDappBrowser] = useState(false);
+    const [dappWalletName, setDappWalletName] = useState('Injected Wallet');
 
     // Web3 Hooks
     const { connectAsync, connectors, status: connectStatus } = useConnect();
@@ -41,9 +76,28 @@ export const useCheckoutState = (): CheckoutContext => {
     // ---------------------------------------------------------
     // 1. Connection Listener (State Guard)
     // ---------------------------------------------------------
+    // DApp browser auto-detect on mount (#024)
+    useEffect(() => {
+        if (detectDappBrowser()) {
+            setIsDappBrowser(true);
+            const eth = (window as Window & { ethereum?: EthProvider }).ethereum;
+            let name = 'Injected Wallet';
+            if (eth?.isMetaMask) name = 'MetaMask';
+            else if (eth?.isTrust) name = 'Trust Wallet';
+            else if (eth?.isCoinbaseWallet) name = 'Coinbase Wallet';
+            setDappWalletName(name);
+            setState('DAPP_CONNECTING');
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Connection state listener
     useEffect(() => {
         if (state === 'PROCESSING' && isConnected) {
             setState('CONNECTED_CHAIN_SELECT');
+        }
+        if (state === 'DAPP_CONNECTING' && isConnected) {
+            setState('DAPP_CONNECTED');
         }
     }, [isConnected, state]);
 
@@ -66,6 +120,8 @@ export const useCheckoutState = (): CheckoutContext => {
             if (EXCHANGE_WALLET_IDS.includes(id)) {
                 setState('HYBRID_ACTION');
             } else {
+                // #029 Deep link: on mobile + known wallet → jump to wallet app
+                tryDeepLink(id);
                 setState('DEBUG_INTERCEPT');
             }
         }, 600);
@@ -131,10 +187,29 @@ export const useCheckoutState = (): CheckoutContext => {
         setSelectedWallet(null);
     }, []);
 
+    const retryDappConnect = useCallback(async () => {
+        setState('DAPP_CONNECTING');
+        try {
+            const connector = connectors.find(c => c.id === 'injected') ?? connectors[0];
+            if (!connector) throw new Error('No injected connector');
+            await connectAsync({ connector });
+            setState('DAPP_CONNECTED');
+        } catch {
+            setState('DAPP_FAILED');
+        }
+    }, [connectors, connectAsync]);
+
+    const disconnectDapp = useCallback(async () => {
+        await disconnectAsync();
+        setState('SELECTION');
+        setIsDappBrowser(false);
+        setSelectedWallet(null);
+    }, [disconnectAsync]);
+
     return {
-        state, selectedWallet,
+        state, selectedWallet, isDappBrowser, dappWalletName,
         selectWallet, confirmHybridAction, selectChain, approveAuth,
         confirmSign, startDappPay, reset, selectPath, debugAction,
-        submitOrder, reselectChain,
+        submitOrder, reselectChain, retryDappConnect, disconnectDapp,
     };
 };

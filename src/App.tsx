@@ -10,6 +10,7 @@ import { ChainSelector } from './components/ChainSelector';
 import { ActionConsole } from './components/ActionConsole';
 import { ExchangePanel } from './components/ExchangePanel';
 import { DappBrowser } from './components/DappBrowser';
+import { DappBrowserPanel } from './components/DappBrowserPanel';
 
 import { PaymentSuccess } from './components/PaymentSuccess';
 import { PaymentFailed } from './components/PaymentFailed';
@@ -18,10 +19,10 @@ import { AddressTransferPanel } from './components/AddressTransferPanel';
 
 function App() {
     const {
-        state, selectedWallet,
+        state, selectedWallet, isDappBrowser, dappWalletName,
         selectWallet, confirmHybridAction, selectChain,
         approveAuth, confirmSign, startDappPay, reset, selectPath,
-        submitOrder, reselectChain,
+        submitOrder, reselectChain, retryDappConnect, disconnectDapp,
     } = useCheckoutState();
 
     const [transferSuccess, setTransferSuccess] = useState(false);
@@ -60,8 +61,19 @@ function App() {
                     className="w-full px-5 pt-4 pb-24 relative flex-1 flex flex-col custom-scrollbar scrolling-touch overflow-y-auto"
                     style={{ WebkitOverflowScrolling: 'touch' }}
                 >
+                    {/* ── DApp Browser panel (auto-detected wallet env) — #024 ── */}
+                    {isDappBrowser && (state === 'DAPP_CONNECTING' || state === 'DAPP_CONNECTED' || state === 'DAPP_FAILED') && (
+                        <DappBrowserPanel
+                            state={state as 'DAPP_CONNECTING' | 'DAPP_CONNECTED' | 'DAPP_FAILED'}
+                            walletName={dappWalletName}
+                            onRetry={retryDappConnect}
+                            onDisconnect={disconnectDapp}
+                            onPay={selectChain}
+                        />
+                    )}
+
                     {/* ── Standard wallet selection ── */}
-                    {(state === 'SELECTION' || state === 'FOCUS' || state === 'PROCESSING') && (
+                    {(state === 'SELECTION' || state === 'FOCUS' || state === 'PROCESSING') && !isDappBrowser && (
                         <div className="transition-opacity duration-300 h-full opacity-100">
                             <WalletGrid
                                 onSelect={selectWallet}

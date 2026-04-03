@@ -3,7 +3,6 @@ import { useCheckoutState, isMobileBrowser } from './hooks/useCheckoutState';
 import { WalletGrid } from './components/WalletGrid';
 import { FallbackConsole } from './components/FallbackConsole';
 import { MerchantHeader } from './components/MerchantHeader';
-import { ChevronDown } from 'lucide-react';
 import { TestSidebar } from './components/TestSidebar';
 import { MobileShell } from './components/MobileShell';
 import { ChainSelector } from './components/ChainSelector';
@@ -17,6 +16,8 @@ import { PaymentFailed } from './components/PaymentFailed';
 import { SandboxSelector } from './components/SandboxSelector';
 import { AddressTransferPanel } from './components/AddressTransferPanel';
 import { DetectedWalletModal } from './components/DetectedWalletModal';
+import { LanguageDropdown } from './components/LanguageDropdown';
+import { useLanguage } from './i18n/LanguageContext';
 
 function App() {
     const {
@@ -28,6 +29,7 @@ function App() {
 
     const [transferSuccess, setTransferSuccess] = useState(false);
     const [hasPromptedWallet, setHasPromptedWallet] = useState(false);
+    const { t } = useLanguage();
 
     // PC detected plugin logic
     const showDetectedModal = Boolean(isDappBrowser && !isMobileBrowser() && !hasPromptedWallet && state === 'SELECTION');
@@ -139,14 +141,11 @@ function App() {
                     style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 20px))' }}
                 >
                     <div className="flex gap-3">
-                        <button className="hover:text-gray-600 transition-colors">Privacy</button>
+                        <button className="hover:text-gray-600 transition-colors">{t('privacy')}</button>
                         <div className="w-px h-3 bg-gray-300"></div>
-                        <button className="hover:text-gray-600 transition-colors">Disclosure</button>
+                        <button className="hover:text-gray-600 transition-colors">{t('disclosure')}</button>
                     </div>
-                    <div className="flex items-center gap-1 bg-gray-800 text-white hover:bg-gray-700 transition-colors px-3 py-1.5 rounded-full shadow-sm cursor-pointer font-bold">
-                        <span>EN</span>
-                        <ChevronDown size={10} />
-                    </div>
+                    <LanguageDropdown />
                 </div>
             </MobileShell>
         </div>

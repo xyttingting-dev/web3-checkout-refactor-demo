@@ -54,6 +54,7 @@ const HOVER_CSS = `
   box-shadow: 0 6px 18px rgba(99,102,241,0.14), 0 3px 8px rgba(0,0,0,0.06);
 }
 .wc-shortcut:active { transform: scale(0.98); transition-duration: 80ms; }
+.wc-shortcut:hover .wc-label { color: #4f46e5; }
 
 .wc-exchange:hover {
   transform: translateY(-2px) scale(1.02);
@@ -171,12 +172,10 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                             style={{
                                 ...CARD_BASE,
                                 padding: '10px 6px 8px', minHeight: 96,
-                                background: 'white',
-                                border: '1px solid rgba(243,186,47,0.22)',
                             }}
                         >
-                            {/* Mini logo cluster */}
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                            {/* Graphic container with standard 40px height for perfect text alignment */}
+                            <div style={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
                                 {EXCHANGE_PARTNERS.slice(0, 3).map((p, i) => (
                                     <div key={p.id} style={{
                                         width: 22, height: 22, borderRadius: '50%',
@@ -197,8 +196,8 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                                     marginLeft: -6, position: 'relative', zIndex: 0,
                                 }}>+1</div>
                             </div>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: '#92400e', textAlign: 'center', lineHeight: 1.4 }}>
-                                Exchange{'\n'}Partners
+                            <span className="wc-label" style={{ fontSize: 11, fontWeight: 500, color: '#374151', textAlign: 'center', lineHeight: 1.3, padding: '0 3px', transition: 'color 150ms ease' }}>
+                                Exchange Partners
                             </span>
                         </button>
 
@@ -209,11 +208,9 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                             style={{
                                 ...CARD_BASE,
                                 padding: '10px 6px 8px', minHeight: 96,
-                                background: 'white',
-                                border: '1px solid rgba(99,102,241,0.18)',
                             }}
                         >
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+                            <div style={{ height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
                                 {[{ bg: '#ef4444' }, { bg: '#3b82f6' }, { bg: '#f59e0b' }, { bg: '#10b981' }].map((c, i) => (
                                     <div key={i} style={{
                                         width: 22, height: 22, borderRadius: '50%',
@@ -223,8 +220,8 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                                     }} />
                                 ))}
                             </div>
-                            <span style={{ fontSize: 10, fontWeight: 600, color: '#3730a3', textAlign: 'center', lineHeight: 1.4 }}>
-                                Address{'\n'}Transfer
+                            <span className="wc-label" style={{ fontSize: 11, fontWeight: 500, color: '#374151', textAlign: 'center', lineHeight: 1.3, padding: '0 3px', transition: 'color 150ms ease' }}>
+                                Address Transfer
                             </span>
                         </button>
 

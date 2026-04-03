@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, QrCode, Check } from 'lucide-react';
+import { ChevronLeft, ChevronDown, QrCode, Check } from 'lucide-react';
 import { getNetworkIcon } from './IconLibrary';
 import { TransactionHistory, type Transaction } from './TransactionHistory';
 import { PaymentSuccess } from './PaymentSuccess';
@@ -59,9 +59,10 @@ type SendState = 'idle' | 'sending' | 'pending' | 'confirmed' | 'failed';
 export const AddressTransferPanel: React.FC<AddressTransferPanelProps> = ({
     onStatusChange, onBack, onSuccess,
 }) => {
-    const [selectedChain, setSelectedChain]     = useState<string | null>(null);
+    const [selectedChain, setSelectedChain]       = useState<string | null>(null);
+    const [isDropdownOpen, setIsDropdownOpen]     = useState(false);
     const [addressGenerated, setAddressGenerated] = useState(false);
-    const [copied, setCopied]                   = useState(false);
+    const [copied, setCopied]                     = useState(false);
     const [status, setStatus]                   = useState<TransferStatus>('WAITING');
     const [receivedAmount, setReceivedAmount]   = useState(0);
     const [showHistory, setShowHistory]         = useState(false);
@@ -224,36 +225,62 @@ export const AddressTransferPanel: React.FC<AddressTransferPanelProps> = ({
                 <>
                     <div>
                         <p className="text-xs font-semibold text-gray-400 mb-3">Select Network</p>
-                        <div className="flex flex-col gap-2">
-                            {CHAINS.map(chain => (
-                                <button key={chain.id} onClick={() => setSelectedChain(chain.id)}
-                                    className={`flex items-center gap-3 px-3.5 py-3 rounded-xl border transition-all ${
-                                        selectedChain === chain.id
-                                            ? 'border-indigo-500 bg-indigo-50'
-                                            : 'border-gray-100 bg-white hover:border-indigo-300'
-                                    }`}>
-                                    <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                                        {getNetworkIcon(chain.id)}
-                                    </div>
-                                    <div className="flex flex-col gap-0.5 text-left flex-1">
-                                        <span className={`text-sm font-bold leading-none ${selectedChain === chain.id ? 'text-indigo-700' : 'text-gray-900'}`}>
-                                            {chain.name}
+                        <div className="relative">
+                            <button
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className={`w-full flex items-center justify-between px-3.5 py-4 rounded-xl border transition-all ${isDropdownOpen ? 'border-indigo-400 ring-4 ring-indigo-50' : 'border-gray-200 bg-white hover:border-indigo-300 shadow-sm'}`}
+                            >
+                                {selectedChain ? (
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                                            {getNetworkIcon(selectedChain)}
+                                        </div>
+                                        <span className="text-sm font-bold text-gray-900">
+                                            {CHAINS.find(c => c.id === selectedChain)?.name}
                                         </span>
-                                        <span className="text-[10px] text-gray-400 leading-none mt-0.5">
-                                            {chain.protocol} · {chain.time}
+                                        <span className="text-[10px] text-gray-500 px-1.5 py-0.5 bg-gray-100 font-semibold rounded">
+                                            {CHAINS.find(c => c.id === selectedChain)?.protocol}
                                         </span>
                                     </div>
-                                    <div className={`w-5 h-5 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 ${
-                                        selectedChain === chain.id ? 'border-indigo-600 bg-indigo-600' : 'border-gray-300'
-                                    }`}>
-                                        {selectedChain === chain.id && <Check size={11} className="text-white" strokeWidth={3} />}
+                                ) : (
+                                    <span className="text-sm font-medium text-gray-400">Choose a network...</span>
+                                )}
+                                <ChevronDown size={18} strokeWidth={2.5} className={`text-gray-400 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {isDropdownOpen && (
+                                <>
+                                    <div className="fixed inset-0 z-10" onClick={() => setIsDropdownOpen(false)} />
+                                    <div className="absolute z-20 top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl max-h-[220px] overflow-y-auto flex flex-col p-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                                        {CHAINS.map(chain => (
+                                            <button key={chain.id} onClick={() => { setSelectedChain(chain.id); setIsDropdownOpen(false); }}
+                                                className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all ${
+                                                    selectedChain === chain.id
+                                                        ? 'bg-indigo-50'
+                                                        : 'hover:bg-gray-50'
+                                                }`}>
+                                                <div className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                                                    {getNetworkIcon(chain.id)}
+                                                </div>
+                                                <div className="flex flex-col gap-0.5 text-left flex-1">
+                                                    <span className={`text-sm leading-none ${selectedChain === chain.id ? 'font-bold text-indigo-700' : 'font-semibold text-gray-900'}`}>
+                                                        {chain.name}
+                                                    </span>
+                                                    <span className="text-[10px] text-gray-400 leading-none mt-0.5">
+                                                        {chain.protocol} · {chain.time}
+                                                    </span>
+                                                </div>
+                                                {selectedChain === chain.id && <Check size={16} className="text-indigo-600" strokeWidth={3} />}
+                                            </button>
+                                        ))}
                                     </div>
-                                </button>
-                            ))}
+                                </>
+                            )}
                         </div>
                     </div>
+                    
                     <button onClick={() => setAddressGenerated(true)} disabled={!selectedChain}
-                        className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+                        className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-bold text-sm hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all mt-6">
                         Generate Address
                     </button>
                 </>

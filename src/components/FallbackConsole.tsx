@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, ShieldAlert } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import { AddressTransferPanel, type TransferStatus } from './AddressTransferPanel';
 import { ErrorCard } from './ErrorCard';
 
@@ -154,18 +154,7 @@ export const FallbackConsole = ({ onRetry, onDappPay }: FallbackConsoleProps) =>
             {/* Main console */}
             <div className="flex flex-col h-full bg-white rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 font-sans antialiased relative z-[1000]">
 
-                {/* Error banner — only shown when not partial-paid */}
-                {transferStatus !== 'PARTIAL_PAID' && (
-                    <div className="bg-orange-50 px-4 pt-4 pb-0 flex flex-col items-center justify-center border-b border-orange-50">
-                        <div className="flex items-center gap-2 text-orange-600 mb-1">
-                            <AlertTriangle size={16} />
-                            <span className="font-bold text-sm">Connection Interrupted</span>
-                        </div>
-                        <span className="text-[10px] font-mono text-orange-400 bg-orange-100/50 px-2 py-0.5 rounded mb-3">
-                            Error 410
-                        </span>
-                    </div>
-                )}
+
 
                 {/* ErrorCard — with new Back button design */}
                 {transferStatus !== 'PARTIAL_PAID' && (

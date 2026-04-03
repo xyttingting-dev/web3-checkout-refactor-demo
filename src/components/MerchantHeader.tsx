@@ -22,7 +22,7 @@ export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) =
     if (isSuccess) return null;
 
     return (
-        <div className={`w-full bg-white relative ${hideAmount ? 'mb-1' : 'mb-5'} !rounded-none md:rounded-t-2xl transition-all`}>
+        <div className={`w-full bg-white relative ${hideAmount ? 'mb-1' : 'mb-2'} !rounded-none md:rounded-t-2xl transition-all`}>
 
             {/* Banner — minHeight scaled down to reduce oversized header while keeping elements */}
             <div
@@ -126,7 +126,7 @@ export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) =
 
             {/* Amount — no Details toggle, order IDs are now in banner */}
             {!hideAmount && (
-                <div className="pt-5 px-5 pb-4 flex flex-col items-center justify-center text-center">
+                <div className="pt-4 px-5 pb-2 flex flex-col items-center justify-center text-center">
                     <div className="flex items-baseline gap-2 mb-1.5">
                         <span className="text-[30px] md:text-[34px] font-bold text-gray-900 tracking-tight leading-none">
                             20.00

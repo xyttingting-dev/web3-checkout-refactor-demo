@@ -171,7 +171,7 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                             style={{
                                 ...CARD_BASE,
                                 padding: '10px 6px 8px', minHeight: 96,
-                                background: 'linear-gradient(145deg, #fffbeb 0%, #fff7ed 100%)',
+                                background: 'white',
                                 border: '1px solid rgba(243,186,47,0.22)',
                             }}
                         >
@@ -209,7 +209,7 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                             style={{
                                 ...CARD_BASE,
                                 padding: '10px 6px 8px', minHeight: 96,
-                                background: 'linear-gradient(145deg, #eef2ff 0%, #f5f3ff 100%)',
+                                background: 'white',
                                 border: '1px solid rgba(99,102,241,0.18)',
                             }}
                         >

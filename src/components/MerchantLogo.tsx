@@ -1,4 +1,5 @@
 import React from 'react';
+import { Store } from 'lucide-react';
 
 /**
  * MerchantLogo
@@ -6,11 +7,11 @@ import React from 'react';
  * Props:
  *   logoUrl      — 商户 logo 图片 URL（可选）
  *   merchantName — 商户名称，无 logoUrl 时取首字母作为 fallback（可选，默认 "Shopify Store"）
- *   brandColor   — 首字母块背景色（可选，默认 Shopify 绿 #96bf48）
+ *   brandColor   — 兜底色块背景色
  *
  * 渲染优先级：
  *   1. logoUrl 存在 → <img> 渲染真实 logo
- *   2. 无 logoUrl   → 首字母 + brandColor 背景 fallback
+ *   2. 无 logoUrl   → 矢量小房子图标 + brandColor 背景 fallback
  */
 
 interface MerchantLogoProps {
@@ -22,11 +23,8 @@ interface MerchantLogoProps {
 export const MerchantLogo: React.FC<MerchantLogoProps> = ({
     logoUrl,
     merchantName = 'Shopify Store',
-    brandColor = '#96bf48',
+    brandColor = 'linear-gradient(135deg, #1e1b4b 0%, #4c1d95 100%)',
 }) => {
-    // Derive initial: take first char of first word, uppercase
-    const initial = merchantName.trim().charAt(0).toUpperCase();
-
     return (
         <div
             style={{
@@ -50,7 +48,7 @@ export const MerchantLogo: React.FC<MerchantLogoProps> = ({
                     }}
                 />
             ) : (
-                /* ── Fallback: initial letter ── */
+                /* ── Fallback: vector house icon ── */
                 <div
                     style={{
                         width: '100%',
@@ -60,22 +58,19 @@ export const MerchantLogo: React.FC<MerchantLogoProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                        boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.3)',
                     }}
                 >
-                    <span
+                    <Store
+                        color="white"
+                        strokeWidth={2.5}
                         style={{
-                            fontFamily: 'Georgia, "Times New Roman", serif',
-                            fontWeight: 900,
-                            color: 'white',
-                            fontSize: '55%',   // scales with parent tile size (56px tile → ~31px, 64px tile → ~35px)
-                            lineHeight: 1,
-                            textShadow: '0 2px 6px rgba(0,0,0,0.25)',
+                            width: '55%',
+                            height: '55%',
+                            filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.4))',
                             userSelect: 'none',
                         }}
-                    >
-                        {initial}
-                    </span>
+                    />
                 </div>
             )}
         </div>

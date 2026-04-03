@@ -31,13 +31,7 @@ function App() {
         <div
             className="min-h-[100dvh] flex md:items-center md:justify-center md:py-16 md:p-6 font-sans text-gray-900 relative transition-all duration-500 antialiased supports-[height:100cqh]:min-h-[100cqh] overflow-x-hidden"
             style={{
-                backgroundColor: '#f0eef8',
-                backgroundImage: [
-                    'radial-gradient(ellipse 75% 60% at 5%  10%, rgba(139,92,246,0.22) 0%, transparent 65%)',
-                    'radial-gradient(ellipse 65% 70% at 92%  8%, rgba(217,70,239,0.16) 0%, transparent 60%)',
-                    'radial-gradient(ellipse 50% 65% at 8%  92%, rgba(99,102,241,0.14) 0%, transparent 60%)',
-                    'radial-gradient(ellipse 70% 45% at 95% 90%, rgba(249,115,22,0.12) 0%, transparent 58%)',
-                ].join(', '),
+                backgroundColor: '#f8fafc',
             }}
         >
             <TestSidebar

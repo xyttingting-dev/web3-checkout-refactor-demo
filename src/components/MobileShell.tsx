@@ -28,8 +28,8 @@ export const MobileShell: React.FC<MobileShellProps> = ({ children }) => {
                 md:max-w-[440px]
                 md:min-h-[600px]
                 md:rounded-2xl
-                md:border md:border-white/62
-                md:ring-1 md:ring-gray-100/60
+                md:border md:border-gray-200
+                md:ring-1 md:ring-black/5
                 bg-white/93
                 backdrop-blur-2xl
                 overflow-hidden
@@ -48,10 +48,10 @@ export const MobileShell: React.FC<MobileShellProps> = ({ children }) => {
                 @media (min-width: 768px) {
                     .mobileshell-inner {
                         box-shadow:
-                            0 0 0 1px rgba(139,92,246,0.06),
-                            0 8px 32px rgba(139,92,246,0.10),
-                            0 32px 80px rgba(0,0,0,0.10),
-                            0 2px 4px rgba(0,0,0,0.04);
+                            0 0 0 1.5px rgba(0,0,0,0.07),
+                            0 12px 40px rgba(0,0,0,0.08),
+                            0 40px 100px rgba(0,0,0,0.12),
+                            0 4px 8px rgba(0,0,0,0.04);
                     }
                 }
             `}</style>

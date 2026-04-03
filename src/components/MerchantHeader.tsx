@@ -24,11 +24,11 @@ export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) =
     return (
         <div className={`w-full bg-white relative ${hideAmount ? 'mb-1' : 'mb-5'} !rounded-none md:rounded-t-2xl transition-all`}>
 
-            {/* Banner — minHeight 15rem to accommodate order IDs at bottom */}
+            {/* Banner — minHeight scaled down to reduce oversized header while keeping elements */}
             <div
-                className="relative w-full overflow-hidden !rounded-none md:!rounded-t-2xl flex flex-col items-center pt-7 md:pt-8 gap-3"
+                className="relative w-full overflow-hidden !rounded-none md:!rounded-t-2xl flex flex-col items-center pt-5 md:pt-6 gap-2"
                 style={{
-                    minHeight: '15rem',
+                    minHeight: '10rem',
                     background: 'linear-gradient(135deg, #1a0533 0%, #3b1278 20%, #7c3aed 42%, #db2777 65%, #f97316 85%, #fbbf24 100%)',
                 }}
             >
@@ -48,14 +48,14 @@ export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) =
                 <div className="absolute top-0 left-0 w-full h-px pointer-events-none"
                     style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 30%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0.4) 70%, transparent 100%)' }} />
                 {/* Pay watermark */}
-                <div className="absolute -bottom-6 -right-6 opacity-[0.06] pointer-events-none select-none animate-float z-0 rotate-12">
-                    <span className="text-[120px] md:text-[140px] font-black text-white italic tracking-tighter leading-none">Pay</span>
+                <div className="absolute -bottom-4 -right-4 opacity-[0.06] pointer-events-none select-none animate-float z-0 rotate-12">
+                    <span className="text-[90px] md:text-[110px] font-black text-white italic tracking-tighter leading-none">Pay</span>
                 </div>
 
                 {/* Logo tile */}
                 <div className="relative z-20 flex-shrink-0"
                     style={{
-                        width: 56, height: 56, borderRadius: 16,
+                        width: 48, height: 48, borderRadius: 14,
                         background: 'rgba(255,255,255,0.14)',
                         backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
                         border: '1.5px solid rgba(255,255,255,0.30)',
@@ -64,7 +64,7 @@ export const MerchantHeader = ({ isSuccess, hideAmount }: MerchantHeaderProps) =
                     <div className="absolute inset-0 pointer-events-none"
                         style={{ borderRadius: 16, background: 'linear-gradient(135deg, rgba(255,255,255,0.22) 0%, transparent 55%)' }} />
                     <div className="relative z-10 w-full h-full p-1.5">
-                        <MerchantLogo merchantName="Shopify Store" brandColor="#96bf48" />
+                        <MerchantLogo merchantName="Shopify Store" />
                     </div>
                 </div>
 

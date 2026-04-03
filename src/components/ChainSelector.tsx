@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 import { getNetworkIcon } from './IconLibrary';
-import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
 /**
@@ -40,9 +39,6 @@ export const ChainSelector = ({ onSelect }: ChainSelectorProps) => {
     const { data: ethBalance } = useBalance({ address });
 
     const [selected, setSelected] = useState('eth');
-
-    // Responsive: detect mobile breakpoint
-    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
     const getBalance = (id: string) => {
         if (id === 'eth' && ethBalance) {
@@ -92,56 +88,7 @@ export const ChainSelector = ({ onSelect }: ChainSelectorProps) => {
         </div>
     );
 
-    // ── MOBILE: Bottom Sheet ─────────────────────────────────────────────────
-    if (isMobile) {
-        return (
-            <>
-                {/* Backdrop */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
-                    onClick={handleConfirm}
-                />
 
-                {/* Sheet */}
-                <motion.div
-                    initial={{ y: '100%' }}
-                    animate={{ y: 0 }}
-                    exit={{ y: '100%' }}
-                    transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-                    className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-2xl"
-                    style={{ paddingBottom: 'env(safe-area-inset-bottom, 16px)' }}
-                >
-                    {/* Handle bar */}
-                    <div className="flex justify-center pt-3 pb-1">
-                        <div className="w-9 h-1 bg-gray-200 rounded-full" />
-                    </div>
-
-                    {/* Title */}
-                    <div className="px-4 pt-2 pb-3">
-                        <h3 className="text-sm font-bold text-gray-900">Select Payment Network</h3>
-                    </div>
-
-                    {/* Chain list */}
-                    <div className="px-4 pb-3">
-                        {chainList}
-                    </div>
-
-                    {/* Confirm button */}
-                    <div className="px-4 pb-4">
-                        <button
-                            onClick={handleConfirm}
-                            className="w-full py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-indigo-200/50 active:scale-[0.98]"
-                        >
-                            Confirm Network
-                        </button>
-                    </div>
-                </motion.div>
-            </>
-        );
-    }
 
     // ── DESKTOP: Inline list ─────────────────────────────────────────────────
     return (

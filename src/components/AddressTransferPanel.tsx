@@ -30,31 +30,6 @@ const MOCK_ADDRESSES: Record<string, string> = {
     default: '0x61e9789745a6BFcAEbDde08D492A71C9234f8b2e',
 };
 
-// USDT contract addresses per chain
-const USDT_CONTRACTS: Record<string, string> = {
-    avax:    '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7',
-    bsc:     '0x55d398326f99059fF775485246999027B3197955',
-    polygon: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
-    eth:     '0xdAC17F958D2ee523a2206206994597C13D831ec7',
-};
-
-// ─── ERC-20 transfer() calldata encoder ──────────────────────────────────────
-// Encodes transfer(address to, uint256 amount) for eth_sendTransaction
-function encodeERC20Transfer(to: string, amountWei: bigint): string {
-    const sig = '0xa9059cbb'; // keccak256('transfer(address,uint256)') first 4 bytes
-    const toHex = to.replace('0x', '').padStart(64, '0');
-    const amountHex = amountWei.toString(16).padStart(64, '0');
-    return `${sig}${toHex}${amountHex}`;
-}
-
-// ─── DApp environment detection ───────────────────────────────────────────────
-function detectDapp(): boolean {
-    if (typeof window === 'undefined') return false;
-    return !!(window as any).ethereum;
-}
-
-// ─── SendViaWallet state ──────────────────────────────────────────────────────
-type SendState = 'idle' | 'sending' | 'pending' | 'confirmed' | 'failed';
 
 export const AddressTransferPanel: React.FC<AddressTransferPanelProps> = ({
     onStatusChange, onBack, onSuccess,
@@ -68,17 +43,9 @@ export const AddressTransferPanel: React.FC<AddressTransferPanelProps> = ({
     const [showHistory, setShowHistory]         = useState(false);
     const [transactions, setTransactions]       = useState<Transaction[]>([]);
 
-    // #026: DApp-specific state
-    const [isDapp]                    = useState(detectDapp);
-    const [sendState, setSendState]   = useState<SendState>('idle');
-    const [txHash, setTxHash]         = useState<string | null>(null);
-    const [sendError, setSendError]   = useState<string | null>(null);
-
     const requiredAmount = 20.00;
     const chainInfo      = CHAINS.find(c => c.id === selectedChain);
     const depositAddress = selectedChain === 'tron' ? MOCK_ADDRESSES.tron : MOCK_ADDRESSES.default;
-    // TRON is not EVM — disable Send via Wallet for TRON
-    const canSendViaWallet = isDapp && selectedChain && selectedChain !== 'tron' && chainInfo?.chainId;
 
     // ─── Track payment ─────────────────────────────────────────────────────────
     const handleTrack = () => {
@@ -105,91 +72,7 @@ export const AddressTransferPanel: React.FC<AddressTransferPanelProps> = ({
         }, 3000);
     };
 
-    // ─── #026: Send via wallet (eth_sendTransaction) ───────────────────────────
-    const handleSendViaWallet = async () => {
-        if (!canSendViaWallet || !selectedChain) return;
-        setSendState('sending');
-        setSendError(null);
 
-        try {
-            const provider = (window as any).ethereum;
-
-            // 1. Request account access
-            const accounts: string[] = await provider.request({ method: 'eth_requestAccounts' });
-            const from = accounts[0];
-            if (!from) throw new Error('No account available');
-
-            // 2. Switch to correct chain if needed
-            try {
-                await provider.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: chainInfo!.chainId }],
-                });
-            } catch (switchErr: any) {
-                // 4902 = chain not added — user needs to add it manually
-                if (switchErr.code !== 4902) throw switchErr;
-            }
-
-            // 3. Build ERC-20 transfer() calldata
-            // 20 USDT @ 6 decimals = 20_000_000n
-            const amountWei = BigInt(Math.round(requiredAmount * 1_000_000));
-            const contractAddr = USDT_CONTRACTS[selectedChain];
-            if (!contractAddr) throw new Error(`No USDT contract for ${selectedChain}`);
-
-            const data = encodeERC20Transfer(depositAddress, amountWei);
-
-            // 4. Send transaction — triggers native wallet signing sheet
-            const hash: string = await provider.request({
-                method: 'eth_sendTransaction',
-                params: [{
-                    from,
-                    to: contractAddr,
-                    data,
-                    value: '0x0',  // No ETH sent, only ERC-20
-                }],
-            });
-
-            setTxHash(hash);
-            setSendState('pending');
-
-            // 5. Poll for receipt (simplified — production use ethers.js provider.waitForTransaction)
-            const pollReceipt = async () => {
-                for (let i = 0; i < 60; i++) {
-                    await new Promise(r => setTimeout(r, 3000));
-                    try {
-                        const receipt = await provider.request({
-                            method: 'eth_getTransactionReceipt',
-                            params: [hash],
-                        });
-                        if (receipt && receipt.status === '0x1') {
-                            setSendState('confirmed');
-                            // Notify backend via onSuccess after brief display
-                            setTimeout(() => onSuccess?.(), 1500);
-                            return;
-                        }
-                        if (receipt && receipt.status === '0x0') {
-                            throw new Error('Transaction reverted');
-                        }
-                    } catch { /* receipt not yet available */ }
-                }
-                throw new Error('Timeout waiting for receipt');
-            };
-
-            pollReceipt().catch(err => {
-                setSendError(err.message ?? 'Transaction failed');
-                setSendState('failed');
-            });
-
-        } catch (err: any) {
-            if (err.code === 4001) {
-                // User rejected
-                setSendState('idle');
-            } else {
-                setSendError(err.message ?? 'Unknown error');
-                setSendState('failed');
-            }
-        }
-    };
 
     const handleCopy = () => {
         navigator.clipboard.writeText(depositAddress).catch(() => {});
@@ -197,7 +80,7 @@ export const AddressTransferPanel: React.FC<AddressTransferPanelProps> = ({
     };
 
     const handleBack = () => {
-        if (addressGenerated) { setAddressGenerated(false); setStatus('WAITING'); setSendState('idle'); setTxHash(null); setSendError(null); }
+        if (addressGenerated) { setAddressGenerated(false); setStatus('WAITING'); }
         else onBack?.();
     };
 
@@ -317,46 +200,8 @@ export const AddressTransferPanel: React.FC<AddressTransferPanelProps> = ({
                         />
                     )}
 
-                    {/* ── #026: DApp Send confirmed state ── */}
-                    {sendState === 'confirmed' && (
-                        <div className="flex flex-col items-center justify-center py-10 gap-4">
-                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-                                <Check size={32} className="text-green-600" strokeWidth={3} />
-                            </div>
-                            <div className="text-center">
-                                <p className="text-sm font-bold text-gray-900">Transfer Sent</p>
-                                <p className="text-[10px] text-gray-400 mt-1">
-                                    {requiredAmount.toFixed(2)} USDT · {chainInfo?.name}
-                                </p>
-                            </div>
-                            {txHash && (
-                                <span className="font-mono text-[10px] text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
-                                    {txHash.slice(0, 10)}...{txHash.slice(-6)} ✓
-                                </span>
-                            )}
-                        </div>
-                    )}
-
-                    {/* ── #026: DApp Send pending state ── */}
-                    {sendState === 'pending' && (
-                        <div className="flex flex-col items-center justify-center py-10 gap-4">
-                            <div className="w-12 h-12 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center">
-                                <div className="w-6 h-6 border-[3px] border-blue-600 border-t-transparent rounded-full animate-spin" />
-                            </div>
-                            <div className="text-center">
-                                <p className="text-sm font-bold text-gray-900">Sending {requiredAmount.toFixed(2)} USDT...</p>
-                                <p className="text-[10px] text-gray-400 mt-1">Transaction submitted — waiting for confirmation</p>
-                            </div>
-                            {txHash && (
-                                <span className="font-mono text-[10px] text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
-                                    {txHash.slice(0, 10)}...{txHash.slice(-6)}
-                                </span>
-                            )}
-                        </div>
-                    )}
-
                     {/* Main address view: WAITING or PARTIAL_PAID */}
-                    {(status === 'WAITING' || status === 'PARTIAL_PAID') && sendState === 'idle' && (
+                    {(status === 'WAITING' || status === 'PARTIAL_PAID') && (
                         <>
                             {/* ✅ Single info card */}
                             <div className="bg-white border border-gray-100 rounded-xl p-3.5 cursor-pointer hover:border-indigo-200 transition-colors"
@@ -402,14 +247,21 @@ export const AddressTransferPanel: React.FC<AddressTransferPanelProps> = ({
                                         {depositAddress}
                                     </p>
                                     <div className="flex items-center justify-between">
-                                        <button onClick={handleCopy}
-                                            className="flex items-center gap-1.5 text-gray-400 hover:text-indigo-600 transition-colors">
-                                            {copied
-                                                ? <Check size={13} className="text-green-500" />
-                                                : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                                            }
-                                            <span className="text-[11px] font-medium">{copied ? 'Copied' : 'Copy'}</span>
-                                        </button>
+                                        <div className="flex items-center gap-4">
+                                            <button onClick={handleCopy}
+                                                className="flex items-center gap-1.5 text-gray-400 hover:text-indigo-600 transition-colors">
+                                                {copied
+                                                    ? <Check size={13} className="text-green-500" />
+                                                    : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                                }
+                                                <span className="text-[11px] font-medium">{copied ? 'Copied' : 'Copy'}</span>
+                                            </button>
+                                            
+                                            <button className="flex items-center gap-1.5 text-gray-400 hover:text-indigo-600 transition-colors group">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-indigo-600"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                                <span className="text-[11px] font-medium group-hover:text-indigo-600">Save Image</span>
+                                            </button>
+                                        </div>
                                         <button onClick={handleTrack}
                                             className="px-3 py-1.5 bg-gray-900 hover:bg-gray-800 text-white text-[10px] font-semibold rounded-lg transition-all">
                                             Track
@@ -418,78 +270,34 @@ export const AddressTransferPanel: React.FC<AddressTransferPanelProps> = ({
                                 </div>
                             </div>
 
-                            {/* ✅ #026: DApp environment — primary CTA is Send via Wallet */}
-                            {canSendViaWallet ? (
-                                <div className="flex flex-col gap-2">
-                                    {/* Primary: Send via Wallet */}
-                                    <button
-                                        onClick={handleSendViaWallet}
-                                        className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-blue-200/50 active:scale-[0.98] flex items-center justify-center gap-2"
-                                    >
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                            <line x1="22" y1="2" x2="11" y2="13"/>
-                                            <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-                                        </svg>
-                                        Send via Wallet
-                                    </button>
-                                    <p className="text-[10px] text-gray-400 text-center">
-                                        Triggers native wallet transfer — no manual copy needed
+                            {/* Standard warning and desktop QR tools */}
+                            <div className="flex flex-col gap-3">
+                                {/* Warning */}
+                                <div className="bg-white border border-orange-100 border-l-[3px] border-l-orange-500 rounded-xl p-3 text-[11px] text-gray-500 leading-relaxed overflow-hidden shrink-0">
+                                    <p className="mb-1.5">
+                                        1. Send exactly{' '}
+                                        <strong className="text-orange-700">
+                                            {status === 'PARTIAL_PAID'
+                                                ? `${(requiredAmount - receivedAmount).toFixed(2)} USDT`
+                                                : `${requiredAmount.toFixed(2)} USDT`}
+                                        </strong>{' '}
+                                        ({chainInfo?.protocol}) — gas not included.
+                                    </p>
+                                    <p>
+                                        2.{' '}
+                                        <strong className="text-orange-700">Do not send non-USDT assets</strong>{' '}
+                                        — permanent loss of funds.
                                     </p>
                                 </div>
-                            ) : (
-                                /* Non-DApp: standard Save Image + QR Code tools */
-                                <div className="flex flex-col gap-3">
-                                    {/* Warning */}
-                                    <div className="bg-white border border-orange-100 border-l-[3px] border-l-orange-400 rounded-xl p-3 text-[11px] text-gray-500 leading-relaxed">
-                                        <p className="mb-1.5">
-                                            1. Send exactly{' '}
-                                            <strong className="text-orange-700">
-                                                {status === 'PARTIAL_PAID'
-                                                    ? `${(requiredAmount - receivedAmount).toFixed(2)} USDT`
-                                                    : `${requiredAmount.toFixed(2)} USDT`}
-                                            </strong>{' '}
-                                            ({chainInfo?.protocol}) — gas not included.
-                                        </p>
-                                        <p>
-                                            2.{' '}
-                                            <strong className="text-orange-700">Do not send non-USDT assets</strong>{' '}
-                                            — permanent loss of funds.
-                                        </p>
-                                    </div>
-                                    <div className="flex gap-3">
-                                        <button className="flex-1 flex flex-col items-center gap-1.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition-colors group">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:stroke-indigo-500"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                            <span className="text-[10px] font-medium text-gray-400 group-hover:text-indigo-600">Save Image</span>
-                                        </button>
-                                        <button className="flex-1 flex flex-col items-center gap-1.5 py-2.5 bg-gray-50 border border-gray-100 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition-colors group">
-                                            <QrCode size={16} className="text-gray-500 group-hover:text-indigo-500" />
-                                            <span className="text-[10px] font-medium text-gray-400 group-hover:text-indigo-600">QR Code</span>
-                                        </button>
-                                    </div>
+                                {/* Desktop UI only */}
+                                <div className="hidden md:block">
+                                    <button className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-50 border border-gray-100 rounded-xl hover:bg-indigo-50 hover:border-indigo-200 transition-colors group tracking-wide shrink-0">
+                                        <QrCode size={15} className="text-gray-500 group-hover:text-indigo-600" />
+                                        <span className="text-[11px] font-semibold text-gray-500 group-hover:text-indigo-600">Show QR Code</span>
+                                    </button>
                                 </div>
-                            )}
+                            </div>
                         </>
-                    )}
-
-                    {/* ── #026: Send failed state ── */}
-                    {sendState === 'failed' && (
-                        <div className="flex flex-col items-center gap-4 py-6">
-                            <div className="w-12 h-12 bg-red-50 border border-red-100 rounded-2xl flex items-center justify-center">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                    <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
-                                </svg>
-                            </div>
-                            <div className="text-center">
-                                <p className="text-sm font-bold text-gray-900">Transaction Failed</p>
-                                <p className="text-[10px] text-gray-400 mt-1">{sendError || 'Unknown error'}</p>
-                            </div>
-                            <button
-                                onClick={() => { setSendState('idle'); setSendError(null); }}
-                                className="px-4 py-2 bg-gray-900 text-white text-xs font-bold rounded-lg"
-                            >
-                                Try Again
-                            </button>
-                        </div>
                     )}
                 </div>
             )}

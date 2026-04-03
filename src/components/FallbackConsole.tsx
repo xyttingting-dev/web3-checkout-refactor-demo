@@ -85,10 +85,11 @@ const QrPlaceholder = () => (
     </div>
 );
 
-export const FallbackConsole = ({ onRetry, onDappPay }: FallbackConsoleProps) => {
+export const FallbackConsole = ({ onRetry }: FallbackConsoleProps) => {
     const [activeTab, setActiveTab]         = useState<'dapp' | 'address'>('dapp');
     const [transferStatus, setTransferStatus] = useState<TransferStatus>('WAITING');
     const [showExitAlert, setShowExitAlert]  = useState(false);
+    const [linkCopied, setLinkCopied] = useState(false);
     const isMobile = useIsMobile();
 
     useEffect(() => {
@@ -200,14 +201,32 @@ export const FallbackConsole = ({ onRetry, onDappPay }: FallbackConsoleProps) =>
                                         <rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
                                     </svg>
                                 </div>
-                                <p className="text-xs text-gray-500 text-center px-4">
-                                    Use your wallet's internal browser to scan or navigate to complete payment.
+                                <p className="text-xs text-gray-500 text-center px-4 leading-relaxed">
+                                    Cannot pull up wallet automatically.<br/>Copy the link below and open it inside your wallet app's browser.
                                 </p>
                                 <button
-                                    onClick={onDappPay}
-                                    className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-200 mt-2"
+                                    onClick={() => {
+                                        navigator.clipboard.writeText("https://pay.bonuspay.com/checkout?order=B50892189DE04");
+                                        setLinkCopied(true);
+                                        setTimeout(() => setLinkCopied(false), 2000);
+                                    }}
+                                    className={`w-full py-3.5 rounded-xl font-bold text-sm transition-all shadow-sm flex items-center justify-center gap-2 mt-2 ${
+                                        linkCopied 
+                                            ? 'bg-green-50 border-green-200 text-green-700' 
+                                            : 'bg-white border border-gray-200 text-gray-900 hover:bg-gray-50 active:scale-[0.98]'
+                                    }`}
                                 >
-                                    Open DApp Browser
+                                    {linkCopied ? (
+                                        <>
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                            <span className="font-bold">Copied!</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                            Copy Payment Link
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         ) : (

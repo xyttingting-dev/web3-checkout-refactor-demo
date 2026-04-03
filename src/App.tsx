@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useCheckoutState } from './hooks/useCheckoutState';
+import { useCheckoutState, isMobileBrowser } from './hooks/useCheckoutState';
 import { WalletGrid } from './components/WalletGrid';
 import { FallbackConsole } from './components/FallbackConsole';
 import { MerchantHeader } from './components/MerchantHeader';
@@ -16,16 +16,21 @@ import { PaymentSuccess } from './components/PaymentSuccess';
 import { PaymentFailed } from './components/PaymentFailed';
 import { SandboxSelector } from './components/SandboxSelector';
 import { AddressTransferPanel } from './components/AddressTransferPanel';
+import { DetectedWalletModal } from './components/DetectedWalletModal';
 
 function App() {
     const {
         state, selectedWallet, isDappBrowser, dappWalletName,
         selectWallet, confirmHybridAction, selectChain,
         approveAuth, confirmSign, startDappPay, reset, selectPath,
-        submitOrder, reselectChain, retryDappConnect, disconnectDapp,
+        submitOrder, reselectChain, retryDappConnect, connectDapp, disconnectDapp,
     } = useCheckoutState();
 
     const [transferSuccess, setTransferSuccess] = useState(false);
+    const [hasPromptedWallet, setHasPromptedWallet] = useState(false);
+
+    // PC detected plugin logic
+    const showDetectedModal = Boolean(isDappBrowser && !isMobileBrowser() && !hasPromptedWallet && state === 'SELECTION');
 
     return (
         <div
@@ -55,6 +60,17 @@ function App() {
                     className="w-full px-5 pt-4 pb-24 relative flex-1 flex flex-col custom-scrollbar scrolling-touch overflow-y-auto"
                     style={{ WebkitOverflowScrolling: 'touch' }}
                 >
+                    {/* ── Desktop Detected Wallet Plugin Modal ── */}
+                    <DetectedWalletModal
+                        isOpen={showDetectedModal}
+                        walletName={dappWalletName}
+                        onConnect={() => {
+                            setHasPromptedWallet(true);
+                            connectDapp();
+                        }}
+                        onCancel={() => setHasPromptedWallet(true)}
+                    />
+
                     {/* ── DApp Browser panel (auto-detected wallet env) — #024 ── */}
                     {isDappBrowser && (state === 'DAPP_CONNECTING' || state === 'DAPP_CONNECTED' || state === 'DAPP_FAILED') && (
                         <DappBrowserPanel
@@ -67,7 +83,7 @@ function App() {
                     )}
 
                     {/* ── Standard wallet selection ── */}
-                    {(state === 'SELECTION' || state === 'FOCUS' || state === 'PROCESSING') && !isDappBrowser && (
+                    {(state === 'SELECTION' || state === 'FOCUS' || state === 'PROCESSING') && (
                         <div className="transition-opacity duration-300 h-full opacity-100">
                             <WalletGrid
                                 onSelect={selectWallet}

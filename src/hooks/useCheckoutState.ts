@@ -25,7 +25,7 @@ const WALLET_DEEP_LINKS: Partial<Record<WalletId, string>> = {
     imtoken:     'imtokenv2://',
 };
 
-function isMobileBrowser(): boolean {
+export function isMobileBrowser(): boolean {
     return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 }
 
@@ -59,6 +59,7 @@ export interface CheckoutContext {
     submitOrder: () => void;
     reselectChain: () => void;
     retryDappConnect: () => void;
+    connectDapp: () => void;
     disconnectDapp: () => void;
 }
 
@@ -86,16 +87,13 @@ export const useCheckoutState = (): CheckoutContext => {
             else if (eth?.isTrust) name = 'Trust Wallet';
             else if (eth?.isCoinbaseWallet) name = 'Coinbase Wallet';
             setDappWalletName(name);
-            setState('DAPP_CONNECTING');
+            // Autoconnect removed so we can land on the 9-grid first
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Connection state listener
     useEffect(() => {
-        if (state === 'PROCESSING' && isConnected) {
-            setState('CONNECTED_CHAIN_SELECT');
-        }
         if (state === 'DAPP_CONNECTING' && isConnected) {
             setState('DAPP_CONNECTED');
         }
@@ -142,6 +140,7 @@ export const useCheckoutState = (): CheckoutContext => {
                     const connector = connectors.find(c => c.name.toLowerCase().includes('metamask')) || connectors[0];
                     if (!connector) throw new Error('No connector found');
                     await connectAsync({ connector });
+                    setState('CONNECTED_CHAIN_SELECT');
                 } catch (error) {
                     console.error('[System] Connection Failed:', error);
                     setState('FALLBACK');
@@ -210,6 +209,6 @@ export const useCheckoutState = (): CheckoutContext => {
         state, selectedWallet, isDappBrowser, dappWalletName,
         selectWallet, confirmHybridAction, selectChain, approveAuth,
         confirmSign, startDappPay, reset, selectPath, debugAction,
-        submitOrder, reselectChain, retryDappConnect, disconnectDapp,
+        submitOrder, reselectChain, retryDappConnect, connectDapp: retryDappConnect, disconnectDapp,
     };
 };

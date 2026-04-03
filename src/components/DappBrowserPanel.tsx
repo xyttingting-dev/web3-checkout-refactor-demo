@@ -81,7 +81,7 @@ export const DappBrowserPanel: React.FC<DappBrowserPanelProps> = ({
                     <div className="w-4 h-4 border-2 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
 
                     <p className="text-[10px] text-gray-300 text-center px-8 leading-relaxed">
-                        Wallet detected automatically.<br />No need to select manually.
+                        Establishing secure connection.<br />Please wait...
                     </p>
                 </motion.div>
             )}

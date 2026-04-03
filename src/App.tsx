@@ -79,6 +79,7 @@ function App() {
                             onRetry={retryDappConnect}
                             onDisconnect={disconnectDapp}
                             onPay={selectChain}
+                            onCancel={reset}
                         />
                     )}
 
@@ -89,6 +90,7 @@ function App() {
                                 onSelect={selectWallet}
                                 checkoutState={state}
                                 selectedWalletId={selectedWallet}
+                                onCancelProcessing={reset}
                             />
                         </div>
                     )}

@@ -92,9 +92,10 @@ interface WalletGridProps {
     onSelect: (id: WalletId) => void;
     checkoutState: CheckoutState;
     selectedWalletId: WalletId | null;
+    onCancelProcessing?: () => void;
 }
 
-export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: WalletGridProps) => {
+export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId, onCancelProcessing }: WalletGridProps) => {
     const connectors = useConnectors();
     const detectedNames = connectors
         .filter(c => c.type === 'injected' && c.icon)
@@ -121,17 +122,28 @@ export const WalletGrid = ({ onSelect, checkoutState, selectedWalletId }: Wallet
                 {isProcessing && selectedWalletId && (
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-[60] flex items-center justify-center bg-white/60 backdrop-blur-xl rounded-2xl"
+                        className="absolute inset-0 z-[60] flex flex-col items-center justify-center bg-white/60 backdrop-blur-xl rounded-2xl"
                     >
                         <motion.div
                             key="loader"
                             layoutId={`wallet-icon-${selectedWalletId}`}
-                            className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.5)] z-50 relative"
+                            className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-[0_0_30px_rgba(59,130,246,0.5)] z-50 relative mb-6"
                             animate={{ scale: [1, 1.08, 1] }}
                             transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                         >
                             <div className="w-12 h-12">{getWalletIcon(selectedWalletId)}</div>
                         </motion.div>
+                        {onCancelProcessing && (
+                            <motion.button
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.5 }}
+                                onClick={(e) => { e.stopPropagation(); onCancelProcessing(); }}
+                                className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:bg-gray-50 hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] transition-all z-50 relative"
+                            >
+                                Cancel Connection
+                            </motion.button>
+                        )}
                     </motion.div>
                 )}
             </AnimatePresence>

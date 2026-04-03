@@ -19,6 +19,7 @@ interface DappBrowserPanelProps {
     onRetry: () => void;
     onDisconnect: () => void;
     onPay: (chainId: string) => void;
+    onCancel: () => void;
 }
 
 const CHAINS = [
@@ -42,7 +43,7 @@ function walletIdFromName(name: string): string {
 }
 
 export const DappBrowserPanel: React.FC<DappBrowserPanelProps> = ({
-    state, walletName, onRetry, onDisconnect, onPay,
+    state, walletName, onRetry, onDisconnect, onPay, onCancel,
 }) => {
     const [selectedChain, setSelectedChain] = React.useState('eth');
     const walletId = walletIdFromName(walletName);
@@ -80,9 +81,19 @@ export const DappBrowserPanel: React.FC<DappBrowserPanelProps> = ({
                     {/* Spinner */}
                     <div className="w-4 h-4 border-2 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
 
-                    <p className="text-[10px] text-gray-300 text-center px-8 leading-relaxed">
+                    <p className="text-[10px] text-gray-300 text-center px-8 leading-relaxed mb-2">
                         Establishing secure connection.<br />Please wait...
                     </p>
+
+                    <motion.button
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        onClick={onCancel}
+                        className="px-6 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.05)] hover:bg-gray-50 hover:shadow-[0_6px_16px_rgba(0,0,0,0.08)] transition-all z-50 relative"
+                    >
+                        Cancel Connection
+                    </motion.button>
                 </motion.div>
             )}
 
